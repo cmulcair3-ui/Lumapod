@@ -219,6 +219,17 @@ input,textarea,select{width:100%;padding:13px 14px;border-radius:16px;border:1px
   <div class="card"><div class="eyebrow">your space</div><h1>Your profile</h1><p class="muted">Personalisation only. Nothing here diagnoses anything.</p><div id="profileBody"></div></div>
   <div class="card"><h2>Progress without pressure</h2><div id="progress"></div></div>
   <div class="card"><h2>📝 Quiet reflection</h2><textarea id="reflection" rows="3" placeholder="A few words, or nothing at all."></textarea><button class="secondary" onclick="saveReflection()">Save privately on this device</button></div>
+
+  <div class="card">
+    <div class="kicker"><div><h2>👥 People & profiles</h2><p class="muted small">Different people can have their own private local profile.</p></div><span class="badge">device-only</span></div>
+    <div id="accountList"></div>
+    <div class="row" style="justify-content:flex-start;margin-top:10px">
+      <button class="primary" onclick="openProfileManager()">Add / manage profiles</button>
+      <button class="secondary" onclick="switchProfile()">Switch profile</button>
+    </div>
+    <p class="protected">Passwords are protected on this device using Web Crypto hashing. This is local profile protection, not online account security.</p>
+  </div>
+
 </section>
 </div>
 
@@ -378,7 +389,7 @@ function gameNumber(type){
 }
 function makeSequence(){const a=2+Math.floor(Math.random()*5),d=2+Math.floor(Math.random()*6),vals=[a,a+d,a+2*d,a+3*d],ans=a+4*d;return{prompt:`What comes next? <b>${vals.join(' · ')} · ?</b>`,options:[ans,ans+d,ans-1,ans+2].sort(()=>Math.random()-.5),answer:ans}}
 function makeMath(){const a=10+Math.floor(Math.random()*30),b=2+Math.floor(Math.random()*9),op=Math.random()>.5?'+':'×',ans=op==='+'?a+b:a*b;return{prompt:`What is <b>${a} ${op} ${b}</b>?`,options:[ans,ans+2,ans-2,ans+5].sort(()=>Math.random()-.5),answer:ans}}
-function answerNumber(i,ans){const got=window.num.options[i];document.getElementById('numStatus').textContent=got===ans?'Correct ✨':'Not quite. You can try another puzzle.';if(got===ans){markPuzzle();toast('Nice one!')}}
+function answerNumber(i,ans){const got=window.num.options[i];document.getElementById('numStatus').textContent=got===ans?'Correct ✨':'Not quite. You can try another puzzle.';if(got===ans){markPuzzle();}}
 
 function gameSpatial(type){
  const q=Math.floor(Math.random()*4),shapes=['▲','◆','★','⬟'],target=shapes[q],rot=shapes[(q+1)%4],same=type==='mirror'?['▲','◀','▼','▶']:[target,rot,shapes[(q+2)%4],shapes[(q+3)%4]];
@@ -386,7 +397,7 @@ function gameSpatial(type){
  let cells=`<div class="pattern-grid"><div>${target}</div><div>↻</div><div>${rot}</div></div><div class="answer-grid">${same.map((x,i)=>`<button onclick="spatialAnswer(${i},${correct})">${x}<br><span class="small muted">${i===0?'Option A':'Option '+String.fromCharCode(65+i)}</span></button>`).join('')}</div><div class="note" id="spatialStatus">Which option matches the target after a mental change?</div>`;
  gameShell(type==='mirror'?'🪞 Mirror Image':'◼️ Spatial Reasoning','A tiny visual challenge for a few minutes.',cells)
 }
-function spatialAnswer(i,correct){const ok=i===correct;document.getElementById('spatialStatus').textContent=ok?'Good eye ✨':'Try again — the idea is to track the transformation, not rush it.';if(ok){markPuzzle();toast('Nice spatial solve!')}}
+function spatialAnswer(i,correct){const ok=i===correct;document.getElementById('spatialStatus').textContent=ok?'Good eye ✨':'Try again — the idea is to track the transformation, not rush it.';if(ok){markPuzzle();}}
 
 function gameMemory(){
  const icons=['🌙','⭐','🌊','🌿','🔥','☁️','🪐','🍋'],deck=[...icons,...icons].sort(()=>Math.random()-.5);
@@ -402,10 +413,10 @@ function gamePattern(){const seq=[0,1,2,3].sort(()=>Math.random()-.5),html='<p s
 function patternTap(i){const p=window.pattern;if(i===p.seq[p.pos]){p.pos++;if(p.pos===p.seq.length){document.getElementById('patternStatus').textContent='Perfect ✨';markPuzzle();toast('Pattern complete!')}}else{p.pos=0;document.getElementById('patternStatus').textContent='Reset. Try again without rushing.'}}
 
 function gameAnagram(){const bank=['SILVER','PLANET','BREEZE','MORNING','PUZZLE','GALAXY','FOREST'];const word=bank[Math.floor(Math.random()*bank.length)],letters=word.split('').sort(()=>Math.random()-.5);gameShell('🧩 Anagram','Rearrange the letters into a word.',`<div style="font-size:28px;text-align:center;letter-spacing:.2em;font-weight:950">${letters.join(' ')}</div><input id="anagramIn" placeholder="Your word"><button class="primary" onclick="answerAnagram('${word}')">Check</button><div class="note" id="anagramStatus"></div>`)}
-function answerAnagram(w){const v=document.getElementById('anagramIn').value.trim().toUpperCase();document.getElementById('anagramStatus').textContent=v===w?'Correct ✨':'Not quite — another go or move on.';if(v===w){markPuzzle();toast('Anagram solved!')}}
+function answerAnagram(w){const v=document.getElementById('anagramIn').value.trim().toUpperCase();document.getElementById('anagramStatus').textContent=v===w?'Correct ✨':'Not quite — another go or move on.';if(v===w){markPuzzle();}}
 
 function gameOddOne(){const symbols=['🍋','🍋','🍋','🍋','🍋','🍋','🍋','🍊','🍋'];gameShell('👀 Odd One Out','Tap the one that does not belong.',`<div class="grid3" id="oddGrid">${symbols.map((x,i)=>`<button class="tile" onclick="oddPick(${i})" style="min-height:80px;text-align:center;font-size:28px">${x}</button>`).join('')}</div><div class="note" id="oddStatus">There is one different symbol.</div>`);window.odd=7}
-function oddPick(i){const ok=i===window.odd;document.getElementById('oddStatus').textContent=ok?'Found it ✨':'Not that one.';if(ok){markPuzzle();toast('Good spot!')}}
+function oddPick(i){const ok=i===window.odd;document.getElementById('oddStatus').textContent=ok?'Found it ✨':'Not that one.';if(ok){markPuzzle();}}
 
 function openTopic(title){const t=LIB.find(x=>x.title===title)||LIB[0];openSheet(`<div class="eyebrow">optional guide</div><h1>${t.icon} ${t.title}</h1><p>${t.text}</p><div class="note">This is general wellbeing information, not a diagnosis or a substitute for professional care.</div><button class="primary" onclick="closeSheet();startBreath(2)">Try a 2-minute reset</button>`)}
 
@@ -440,10 +451,214 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if((state.theme||'system')==='system')applyPrefs()});
 applyPrefs();render();if(!state.name)setTimeout(setupProfile,320);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+
+/* === LumaPod Sensory + Profiles Upgrade JS === */
+const PROFILE_KEY='lumapod_profiles_v1';
+const ACTIVE_PROFILE_KEY='lumapod_active_profile_v1';
+let profiles=loadProfiles(), activeProfileId=localStorage.getItem(ACTIVE_PROFILE_KEY)||null;
+let envAnim=null, envType=null, envSoundType='off', envSoundOn=true, envMotion=true, envSoundTimer=null;
+
+function loadProfiles(){
+  try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||'[]')}catch(e){return[]}
+}
+function saveProfiles(){localStorage.setItem(PROFILE_KEY,JSON.stringify(profiles))}
+function uid(){return crypto.randomUUID?crypto.randomUUID():'p-'+Date.now()+'-'+Math.random().toString(16).slice(2)}
+async function hashPassword(password,salt){
+  const data=new TextEncoder().encode(salt+':'+password);
+  const digest=await crypto.subtle.digest('SHA-256',data);
+  return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function currentProfile(){return profiles.find(p=>p.id===activeProfileId)||null}
+function syncStateFromProfile(){const p=currentProfile();if(p){state={...(p.state||{}),name:p.name,age:p.age};save()}}
+function saveStateToProfile(){const p=currentProfile();if(p){p.name=state.name;p.age=state.age;p.state={...state};p.lastUsed=Date.now();saveProfiles()}}
+async function createProfile(name,age,password){
+  const salt=crypto.getRandomValues(new Uint8Array(16)).reduce((s,b)=>s+b.toString(16).padStart(2,'0'),'');
+  const passHash=await hashPassword(password,salt);
+  const p={id:uid(),name,age,state:{...state,name,age,sessions:0,puzzles:0,pods:0,focusSessions:0,reflection:''},salt,passHash,lastUsed:Date.now()};
+  profiles.push(p);activeProfileId=p.id;localStorage.setItem(ACTIVE_PROFILE_KEY,p.id);saveProfiles();state=p.state;save();render();renderProfiles();
+}
+async function verifyProfile(p,password){return (await hashPassword(password,p.salt))===p.passHash}
+async function unlockProfile(id,password){
+  const p=profiles.find(x=>x.id===id);if(!p){toast('Profile not found.');return false}
+  if(!(await verifyProfile(p,password))){toast('That password did not match.');return false}
+  activeProfileId=id;localStorage.setItem(ACTIVE_PROFILE_KEY,id);state={...(p.state||{}),name:p.name,age:p.age};save();p.lastUsed=Date.now();saveProfiles();render();renderProfiles();toast(`Welcome back, ${p.name}.`);return true
+}
+function migrateLegacyProfile(){
+  if(profiles.length)return;
+  if(state.name||state.age){
+    const p={id:uid(),name:state.name||'Profile',age:Number(state.age)||18,state:{...state},salt:null,passHash:null,lastUsed:Date.now(),legacy:true};
+    profiles=[p];activeProfileId=p.id;localStorage.setItem(ACTIVE_PROFILE_KEY,p.id);saveProfiles();
+  }
+}
+function renderProfiles(){
+  const el=document.getElementById('accountList');if(!el)return;
+  if(!profiles.length){el.innerHTML='<div class="note">No local profiles yet. Create the first one.</div>';return}
+  el.innerHTML=profiles.sort((a,b)=>(b.lastUsed||0)-(a.lastUsed||0)).map(p=>`<div class="profileRow"><div class="avatarWrap"><div class="profileAvatar">${esc((p.name||'?')[0].toUpperCase())}</div><div><b>${esc(p.name)}</b><div class="protected">${p.id===activeProfileId?'Current profile':'Private local profile'}${p.passHash?' · 🔒 protected':''}</div></div></div><button class="secondary" onclick="selectProfile('${p.id}')">${p.id===activeProfileId?'Current':'Use'}</button></div>`).join('');
+}
+function openProfileManager(){
+  const rows=profiles.map(p=>`<button class="tile" onclick="selectProfile('${p.id}')"><span class="icon">👤</span><b>${esc(p.name)}</b><span class="muted small">${p.passHash?'Password protected':'Legacy profile — add password by recreating'}</span></button>`).join('');
+  openSheet(`<h1>👥 Profiles</h1><p class="muted">Profiles are stored only on this device.</p>${rows?'<div class="grid">'+rows+'</div>':''}
+    <div class="divider"></div><h3>Create a new profile</h3><input id="newPName" maxlength="30" placeholder="Name"><input id="newPAge" type="number" min="8" max="120" placeholder="Age"><input id="newPPass" type="password" minlength="4" placeholder="Password (4+ characters)"><button class="primary" onclick="createProfileUI()">Create profile</button>
+    <div class="note">This is suitable for a shared device. It is not a cloud account system, and resetting the browser/device can remove local profiles.</div>`);
+}
+async function createProfileUI(){
+  const n=document.getElementById('newPName').value.trim(),a=Number(document.getElementById('newPAge').value),pw=document.getElementById('newPPass').value;
+  if(!n||!a||a<8||a>120||pw.length<4){toast('Enter a name, valid age and a password of at least 4 characters.');return}
+  await createProfile(n,a,pw);closeSheet();renderProfiles();toast(`Profile created for ${n}.`);
+}
+function selectProfile(id){
+  const p=profiles.find(x=>x.id===id);if(!p)return;
+  if(!p.passHash){activeProfileId=id;localStorage.setItem(ACTIVE_PROFILE_KEY,id);state={...(p.state||{}),name:p.name,age:p.age};save();render();renderProfiles();toast(`Switched to ${p.name}.`);return}
+  openSheet(`<h1>🔒 ${esc(p.name)}</h1><p class="muted">Enter the profile password on this device.</p><input id="profilePw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')unlockFromUI('${id}')"><button class="primary" onclick="unlockFromUI('${id}')">Unlock</button><button class="secondary" style="margin-top:8px" onclick="closeSheet()">Cancel</button>`);
+}
+async function unlockFromUI(id){const pw=document.getElementById('profilePw').value;const ok=await unlockProfile(id,pw);if(ok)closeSheet()}
+function switchProfile(){if(profiles.length<2){toast('Create another profile first.');return}openProfileManager()}
+
+function showSuccess(message='Nice!'){
+  const o=document.getElementById('successOverlay'),orb=o.querySelector('.successOrb'),t=document.getElementById('successText');t.textContent=message;orb.innerHTML='✓';
+  o.classList.add('show');for(let i=0;i<18;i++){const p=document.createElement('i');p.className='particleBurst';const ang=Math.random()*Math.PI*2,dist=90+Math.random()*190;p.style.setProperty('--dx',Math.cos(ang)*dist+'px');p.style.setProperty('--dy',Math.sin(ang)*dist+'px');o.appendChild(p)}
+  clearTimeout(showSuccess.t);showSuccess.t=setTimeout(()=>{o.classList.remove('show');o.querySelectorAll('.particleBurst').forEach(x=>x.remove())},1250)
+}
+function markPuzzle(){
+  state.puzzles=(state.puzzles||0)+1;save();saveStateToProfile();showSuccess('Puzzle complete ✨');render();
+}
+
+function enterEnvironment(id){
+  const p=PODS.find(x=>x.id===id)||PODS[0];envType=id;document.getElementById('envStage').classList.add('show');
+  document.getElementById('envBadge').textContent=p.icon+' Pod';document.getElementById('envTitle').textContent=p.name;document.getElementById('envSub').textContent=p.sub;
+  document.getElementById('envTip').textContent=environmentTip(id);currentPod=p;state.pods=(state.pods||0)+1;save();saveStateToProfile();render();
+  startEnvironmentCanvas(id);startEnvironmentSound(id);
+}
+function environmentTip(id){return {rain:'Watch the rain lines drift while everything else stays still.',ocean:'Let the wave rhythm move slowly across the horizon.',forest:'Branches, fireflies and mist move at different speeds.',space:'Stars drift at different depths for a quiet sense of distance.',fire:'Warm embers rise and fade; the glow gently breathes.',cloud:'Cloud layers move at different speeds for a weightless feel.'}[id]||'Let the environment run in the background.'}
+function leaveEnvironment(){stopEnvironment();document.getElementById('envStage').classList.remove('show')}
+function envQuiet(){envSoundOn=false;stopEnvironmentSound();document.getElementById('envSoundBtn').textContent='🔇 Quiet';}
+function cycleEnvSound(){envSoundOn=!envSoundOn;if(envSoundOn)startEnvironmentSound(envType);else stopEnvironmentSound();document.getElementById('envSoundBtn').textContent=envSoundOn?'🔊 Sound on':'🔇 Sound off'}
+function toggleEnvMotion(){envMotion=!envMotion;document.getElementById('envTip').textContent=envMotion?environmentTip(envType):'Motion paused. The scene is still while sound can continue.'}
+function stopEnvironment(){cancelAnimationFrame(envAnim);envAnim=null;stopEnvironmentSound()}
+function canvasSetup(){const c=document.getElementById('envCanvas'),dpr=Math.min(2,devicePixelRatio||1),w=innerWidth,h=innerHeight;c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return{x,w,h}}
+function startEnvironmentCanvas(type){
+  const {x,w,h}=canvasSetup(),stars=[],rain=[],embers=[],fireflies=[],trees=[];
+  for(let i=0;i<180;i++)stars.push({x:Math.random()*w,y:Math.random()*h*.72,r:.3+Math.random()*1.6,z:.2+Math.random()*.8,s:-.06+Math.random()*.12});
+  for(let i=0;i<120;i++)rain.push({x:Math.random()*w,y:Math.random()*h,len:10+Math.random()*26,s:260+Math.random()*260});
+  for(let i=0;i<70;i++)embers.push({x:w*.5+(Math.random()-.5)*180,y:h*.80+Math.random()*70,v:(Math.random()*35+16),r:1+Math.random()*3,a:Math.random()*.8+.2});
+  for(let i=0;i<24;i++)fireflies.push({x:Math.random()*w,y:h*.45+Math.random()*h*.38,ph:Math.random()*6.28,s:.3+Math.random()*.8});
+  for(let i=0;i<34;i++)trees.push({x:i*w/34+Math.random()*30-15,s:.6+Math.random()*.8});
+  let t0=performance.now();
+  const draw=(t)=>{
+    envAnim=requestAnimationFrame(draw);const dt=Math.min(.05,(t-t0)/1000);t0=t;
+    if(!envMotion){/* hold the scene */} else t0=t;
+    x.clearRect(0,0,w,h);
+    if(type==='rain')drawRain(x,w,h,rain,t,dt);
+    if(type==='ocean')drawOcean(x,w,h,t);
+    if(type==='forest')drawForest(x,w,h,trees,fireflies,t);
+    if(type==='space')drawSpace(x,w,h,stars,t,dt);
+    if(type==='fire')drawFire(x,w,h,embers,t,dt);
+    if(type==='cloud')drawCloud(x,w,h,t);
+  };
+  draw(performance.now());
+}
+function grad(x,c1,c2,w,h){const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,c1);g.addColorStop(1,c2);x.fillStyle=g;x.fillRect(0,0,w,h)}
+function drawRain(x,w,h,a,t,dt){grad(x,'#091a30','#14263a',w,h);x.globalAlpha=.8;x.fillStyle='#b6e8ff';x.beginPath();for(const q of a){if(envMotion){q.y+=q.s*dt;if(q.y>h)q.y=-q.len;q.x+=q.s*.06*dt}x.moveTo(q.x,q.y);x.lineTo(q.x-3,q.y+q.len)}x.strokeStyle='rgba(172,220,255,.32)';x.stroke();x.globalAlpha=.9; x.fillStyle='rgba(225,245,255,.8)';x.beginPath();x.arc(w*.18,h*.22,80+Math.sin(t/1900)*8,0,Math.PI*2);x.fill(); x.globalAlpha=1}
+function drawOcean(x,w,h,t){grad(x,'#06243a','#0a5e72',w,h);const horizon=h*.52; x.fillStyle='#d9f4ff';x.globalAlpha=.22;x.beginPath();x.arc(w*.75,h*.22,65,0,Math.PI*2);x.fill();for(let j=0;j<7;j++){const y=horizon+j*45; x.beginPath();for(let i=0;i<=w;i+=10){const yy=y+Math.sin(i*.015+j*.8+t*.00035*(1+j*.08))*9;x.lineTo(i,yy)}x.lineWidth=3;x.strokeStyle=`rgba(206,244,255,${.22-j*.022})`;x.stroke()}}
+function drawForest(x,w,h,trees,bugs,t){grad(x,'#071a17','#1d4e42',w,h);x.globalAlpha=.18;x.fillStyle='#d8ffea';x.beginPath();x.arc(w*.76,h*.21,60,0,Math.PI*2);x.fill();for(const q of trees){const base=h*.86,th=h*.25*q.s;x.fillStyle=q.s>.9?'rgba(5,22,18,.95)':'rgba(8,35,28,.88)';x.beginPath();x.moveTo(q.x,base);x.lineTo(q.x-18*q.s,base);x.lineTo(q.x-7*q.s,base-th*.55);x.lineTo(q.x-24*q.s,base-th*.55);x.lineTo(q.x,base-th);x.lineTo(q.x+24*q.s,base-th*.55);x.lineTo(q.x+7*q.s,base-th*.55);x.lineTo(q.x+18*q.s,base);x.fill()}for(const b of bugs){const px=(b.x+Math.sin(t*.0006+b.ph)*18+w)%w,py=b.y+Math.cos(t*.001+b.ph)*12;x.fillStyle=`rgba(210,255,176,${.28+.25*Math.sin(t*.003+b.ph)})`;x.shadowBlur=18;x.shadowColor='#a8ffb5';x.beginPath();x.arc(px,py,2.2,0,Math.PI*2);x.fill();x.shadowBlur=0}}
+function drawSpace(x,w,h,stars,t,dt){grad(x,'#050713','#12153a',w,h);x.fillStyle='rgba(209,190,255,.16)';x.beginPath();x.arc(w*.75,h*.24,74,0,Math.PI*2);x.fill();for(const s of stars){if(envMotion){s.x+=s.s*s.z;if(s.x<0)s.x=w;if(s.x>w)s.x=0}x.globalAlpha=.3+.7*s.z;x.fillStyle='#e7eaff';x.beginPath();x.arc(s.x,s.y,s.r*s.z,0,Math.PI*2);x.fill()}x.globalAlpha=1}
+function drawFire(x,w,h,embers,t,dt){grad(x,'#150b08','#6d3216',w,h);const gx=w*.5,gy=h*.85;const grd=x.createRadialGradient(gx,gy,8,gx,gy,220);grd.addColorStop(0,'rgba(255,245,195,.65)');grd.addColorStop(1,'rgba(255,120,25,0)');x.fillStyle=grd;x.fillRect(0,0,w,h);for(const e of embers){if(envMotion){e.y-=e.v*dt;e.x+=(Math.random()-.5)*30*dt;if(e.y<h*.34)e.y=h*.86+Math.random()*60}x.fillStyle=`rgba(255,${150+Math.random()*80},70,${e.a})`;x.beginPath();x.arc(e.x,e.y,e.r,0,Math.PI*2);x.fill()}x.fillStyle='rgba(255,215,140,.45)';x.beginPath();x.ellipse(gx,gy,120+Math.sin(t*.004)*8,55+Math.sin(t*.003)*4,0,0,Math.PI*2);x.fill()}
+function drawCloud(x,w,h,t){grad(x,'#21314a','#8aafcb',w,h);for(let k=0;k<8;k++){const bx=((k*190+t*.008*(k%2?1:-1))%(w+260))-130,by=h*.25+(k%3)*100; x.fillStyle=`rgba(244,250,255,${.12+(k%3)*.03})`;x.beginPath();x.arc(bx,by,60+(k%2)*25,0,Math.PI*2);x.arc(bx+55,by+8,50,0,Math.PI*2);x.arc(bx-52,by+12,43,0,Math.PI*2);x.fill()}}
+
+function startEnvironmentSound(type){
+  stopEnvironmentSound();envSoundType=type;if(!envSoundOn)return;
+  try{ensureAudio();if(audioCtx.state==='suspended')audioCtx.resume();const root=audioCtx.createGain();root.gain.value=.75;root.connect(masterGain);
+    const noise=audioCtx.createBufferSource();noise.buffer=noiseBuffer(3);noise.loop=true;
+    const f=audioCtx.createBiquadFilter();f.type='lowpass';
+    if(type==='rain'){f.frequency.value=2800;noise.connect(f);f.connect(root);noise.start();audioNodes.push(noise)}
+    else if(type==='ocean'){f.frequency.value=900;noise.connect(f);f.connect(root);noise.start();const l=audioCtx.createOscillator(),lg=audioCtx.createGain();l.frequency.value=.085;lg.gain.value=.42;l.connect(lg);lg.connect(root.gain);l.start();audioNodes.push(noise,l)}
+    else if(type==='forest'){f.type='bandpass';f.frequency.value=3400;f.Q.value=.55;noise.connect(f);f.connect(root);noise.start();const tone=audioCtx.createOscillator(),tg=audioCtx.createGain();tone.frequency.value=220;tg.gain.value=.012;tone.connect(tg);tg.connect(root);tone.start();audioNodes.push(noise,tone)}
+    else if(type==='space'){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=63;g.gain.value=.06;o.connect(g);g.connect(root);o.start();audioNodes.push(o)}
+    else if(type==='fire'){f.type='bandpass';f.frequency.value=1250;f.Q.value=.7;noise.connect(f);f.connect(root);noise.start();audioNodes.push(noise)}
+    else {f.frequency.value=650;noise.connect(f);f.connect(root);noise.start();audioNodes.push(noise)}
+  }catch(e){toast('Audio unavailable — visuals remain active.')}
+}
+function stopEnvironmentSound(){try{audioNodes?.forEach(n=>{try{n.stop?.();n.disconnect?.()}catch(e){}})}catch(e){}audioNodes=[]}
+function cycleEnvSound(){}
+PODS.forEach(p=>{if(!p.bg) p.bg='linear-gradient(135deg,#17283f,#0a1220)'});
+
+// Override pod launcher to enter the actual environment instead of the placeholder sheet.
+const originalEnterPod=enterPod;
+enterPod=function(id){enterEnvironment(id)};
+
+// Keep profile changes in sync whenever the existing app writes state.
+const originalSave=save;
+save=function(){localStorage.setItem(KEY,JSON.stringify(state));saveStateToProfile()};
+const originalRender=render;
+render=function(){originalRender();renderProfiles();};
+
+migrateLegacyProfile();
+renderProfiles();
+
 </script>
 <style>
 .lumi{animation-name:float}
 @keyframes breathe{0%,100%{transform:scale(.88)}50%{transform:scale(1.07)}}
+
+/* === LumaPod Sensory + Profiles Upgrade === */
+#envStage{position:fixed;inset:0;z-index:110;display:none;background:#050914;color:#fff}
+#envStage.show{display:block}
+#envCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.envShade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,9,20,.12),rgba(4,9,20,.58))}
+.envPanel{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:min(760px,calc(100% - 28px));
+  padding:18px;border-radius:28px;background:rgba(7,14,25,.54);border:1px solid rgba(255,255,255,.18);
+  backdrop-filter:blur(20px);box-shadow:0 22px 90px rgba(0,0,0,.32)}
+.envTop{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.envTitle{font-size:26px;font-weight:950;letter-spacing:-.5px}.envSub{font-size:12px;color:#bcd2e7}
+.envBtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.envBtns button{padding:10px 13px;border-radius:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);color:#fff;font-weight:850}
+.envBtns .primaryEnv{background:rgba(162,221,255,.22);border-color:rgba(162,221,255,.35)}
+#successOverlay{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;pointer-events:none}
+#successOverlay.show{display:flex}
+.successOrb{width:170px;height:170px;border-radius:50%;position:relative;display:grid;place-items:center;font-size:44px;
+  background:radial-gradient(circle at 35% 30%,#fff 0 6%,#a7f2df 18%,#72cfff 52%,#7274e8 100%);
+  box-shadow:0 0 0 0 rgba(123,232,210,.3),0 0 120px rgba(111,204,255,.5);
+  animation:successPop .9s cubic-bezier(.18,.9,.2,1.2) both}
+.successOrb:before,.successOrb:after{content:"";position:absolute;border:2px solid rgba(255,255,255,.75);border-radius:50%;inset:-12px;animation:successRing 1s ease-out both}
+.successOrb:after{inset:-34px;animation-delay:.08s}
+.successText{position:absolute;margin-top:240px;font-weight:950;font-size:22px;text-shadow:0 4px 20px #000}
+@keyframes successPop{0%{transform:scale(.25);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes successRing{0%{transform:scale(.55);opacity:.9}100%{transform:scale(1.4);opacity:0}}
+.particleBurst{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;background:#fff;animation:burst 900ms ease-out forwards}
+@keyframes burst{to{transform:translate(var(--dx),var(--dy)) scale(.05);opacity:0}}
+.profileRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid var(--line);margin:8px 0}
+.profileAvatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#9c8cff);font-weight:950}
+.avatarWrap{display:flex;align-items:center;gap:10px}
+.accountTabs{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.accountTabs button{white-space:nowrap}
+.protected{font-size:11px;color:var(--muted)}
+.profileLock{padding:15px;border-radius:17px;background:rgba(255,255,255,.04);border:1px solid var(--line);margin-top:10px}
+.envBadge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:11px;font-weight:850}
+@media(max-width:560px){.envPanel{bottom:12px}.envTitle{font-size:22px}.successOrb{width:145px;height:145px}.successText{margin-top:210px}}
+
 </style>
+
+<div id="envStage" aria-live="polite">
+  <canvas id="envCanvas"></canvas>
+  <div class="envShade"></div>
+  <div class="envPanel">
+    <div class="envTop">
+      <div><div class="envBadge" id="envBadge">🌌 Pod</div><div class="envTitle" id="envTitle">Cosmic Drift</div><div class="envSub" id="envSub">Stars, low hum, slow movement.</div></div>
+      <button class="secondary" onclick="leaveEnvironment()">Close</button>
+    </div>
+    <div class="envBtns">
+      <button class="primaryEnv" id="envSoundBtn" onclick="cycleEnvSound()">🔊 Sound on</button>
+      <button onclick="toggleEnvMotion()">✨ Motion</button>
+      <button onclick="envQuiet()">🫧 Quiet</button>
+      <button onclick="openDistract()">🧩 Puzzle</button>
+    </div>
+    <div class="statusline" style="margin:11px 0 0"><span class="small" id="envTip">Let the environment run in the background.</span><span class="small" id="envTimer">∞</span></div>
+  </div>
+</div>
+
+<div id="successOverlay">
+  <div class="successOrb">✓</div>
+  <div class="successText" id="successText">Nice!</div>
+</div>
+
 </body>
 </html>

@@ -1,48 +1,17 @@
-# LumaPod — The Next Level
+# LumaPod — Sensory + Profiles Upgrade
 
-Replace the existing `index.html`, `manifest.webmanifest` and `sw.js` in the GitHub repository with the files in this package.
+This upgrade adds:
+- Full-screen animated environments for every Escape Pod using device-rendered Canvas visuals.
+- Environment-specific motion: rain, waves, trees/fireflies, stars, embers, and drifting cloud layers.
+- Environment-specific procedural sound profiles using Web Audio.
+- A success celebration overlay for completed puzzles with glow, rings and particle burst.
+- Local multi-profile support with individual names, ages and password protection using Web Crypto SHA-256 + random salt.
+- Profile switching on shared devices.
+- Device-only profile storage (not cloud authentication).
+- `lumapod-v4` service-worker cache.
 
-Keep your existing:
-- `icon-192.png`
-- `icon-512.png`
-- `icon.svg`
-
-## Included
-- Premium glass/ambient visual system
-- Home redesign
-- LumaSound generated audio: rain, ocean, forest, space, fire
-- Immersive Escape Pods
-- Focus timer
-- Breathe sessions
-- Quiet escape
-- Check-in and personalisation
-- Installable PWA UI
-- Offline app-shell caching
-- Playroom with:
-  - Word Search
-  - Sudoku
-  - Numerical reasoning
-  - Quick maths
-  - Spatial reasoning
-  - Mirror-image style challenge
-  - Memory matching
-  - Mini maze
-  - Pattern tap
-  - Anagrams
-  - Odd-one-out
-- “Distract Me” random puzzle launcher
-- Progress tracking without streak pressure
-- Optional local Luma companion UI
-- Settings for theme, reduced motion, low stimulation and larger text
-
-## Important AI note
-The Luma companion currently uses a safe local fallback so it works on GitHub Pages without exposing an API key.
-
-For real OpenAI responses, use a server-side endpoint (for example a Cloudflare Worker) and have the browser call `/api/luma`. Do **not** put an OpenAI API key into `index.html` or any public GitHub file.
-
-## Deploy
-1. Update the three files in GitHub.
-2. GitHub Pages will redeploy from `main`.
-3. Wait for the Pages deployment to finish.
-4. Open the same GitHub Pages URL.
-5. On Chrome, use **Install** or **Add to Home screen**.
+Important:
+- No external GIF/image hosts are required for the environments; the scenes are rendered locally, which keeps them crisp on HD displays and works offline.
+- Password protection is local-device protection, not a cloud account/security system.
+- Never put an OpenAI API key in this public repository. Use a server-side proxy such as a Cloudflare Worker for real AI calls.
+- Keep your existing icon files.
