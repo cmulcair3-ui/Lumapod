@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LumaPod — a softer place to land</title>
+<style>
+:root{
+  --bg:#f4faff;--bg2:#edf7fd;--card:#ffffff;--ink:#18334d;--muted:#6d8295;
+  --line:#dcebf6;--accent:#55a9df;--accent2:#8bcdf0;--soft:#e8f6ff;
+  --soft2:#f5fbff;--good:#5c9b80;--warn:#9a7548;--danger:#a85c62;
+  --shadow:0 18px 48px rgba(75,135,165,.10);--nav:rgba(255,255,255,.90);
+  --radius:26px;
+}
+*{box-sizing:border-box}
+html{font-size:16px;scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:
+ linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);
+ font-family:ui-rounded,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ line-height:1.5;-webkit-font-smoothing:antialiased}
+body.dark{--bg:#101d2a;--bg2:#142635;--card:#172938;--ink:#eaf6ff;--muted:#a8bdca;
+ --line:#294555;--soft:#203b4d;--soft2:#1a303f;--accent:#70bde8;--accent2:#92d9f5;
+ --nav:rgba(20,38,52,.92);--shadow:0 18px 48px rgba(0,0,0,.22)}
+body.low{--bg:#f6f5ef;--bg2:#f0efe8;--card:#fffefa;--ink:#30352f;--muted:#74786f;
+ --line:#deded5;--soft:#eeeee5;--soft2:#faf9f3;--accent:#799b8b;--accent2:#b5c8bd}
+body.dark.low{--bg:#171a19;--bg2:#1d211f;--card:#242925;--ink:#eef2ed;--muted:#b5bbb4;
+ --line:#3a403b;--soft:#303730;--soft2:#282d29;--accent:#91b5a4;--accent2:#b9d0c3}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border:0;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
+ outline:3px solid #9dd5f4;outline-offset:3px}
+.app{max-width:820px;margin:auto;padding:18px 16px 112px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px}
+.brand{font-size:25px;font-weight:900;letter-spacing:-.7px}
+.sub{font-size:13px;color:var(--muted)}
+.iconbtn{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);border:1px solid var(--line)}
+.screen{display:none}.screen.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:14px 0;box-shadow:var(--shadow);overflow:hidden}
+.hero{text-align:center;padding:28px 20px}
+.lumi{width:178px;height:178px;margin:3px auto 20px;border-radius:50%;display:grid;place-items:center;
+ color:#fff;font-weight:900;font-size:27px;letter-spacing:-.5px;
+ background:radial-gradient(circle at 35% 28%,#fff 0 8%,var(--accent2) 22%,var(--accent) 58%,#5a8ed3 100%);
+ box-shadow:0 0 0 16px rgba(174,224,248,.20),0 0 68px rgba(117,188,231,.36);
+ animation:float 5s ease-in-out infinite}
+.lumi.breathe{animation:breathe 8s ease-in-out infinite}
+.lumi.still{animation:none;transform:scale(.93)}
+.lumi.drift{animation:drift 10s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(.86)}50%{transform:scale(1.08)}}
+@keyframes float{50%{transform:translateY(-6px)}}
+@keyframes drift{0%,100%{transform:scale(.94) translateY(2px)}50%{transform:scale(1.02) translateY(-5px)}}
+h1,h2,h3{margin:0 0 8px;line-height:1.18}
+h1{font-size:clamp(25px,6vw,36px);letter-spacing:-.5px}
+h2{font-size:20px}h3{font-size:16px}
+p{margin:7px 0;overflow-wrap:anywhere}.muted{color:var(--muted)}
+.small{font-size:12px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:850;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
+.primary{background:var(--accent);color:white;padding:13px 18px;border-radius:16px;font-weight:850;box-shadow:0 8px 20px rgba(85,169,223,.18)}
+.secondary{background:var(--soft);padding:12px 16px;border-radius:16px;font-weight:700}
+.ghost{background:transparent;padding:10px 12px;border-radius:14px;font-weight:700}
+.danger{background:#fff0f0;color:var(--danger)}body.dark .danger{background:#3a272a}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.tile{min-width:0;min-height:108px;padding:16px;border-radius:21px;background:var(--soft);border:1px solid var(--line);
+ text-align:left;overflow-wrap:anywhere;white-space:normal;transition:transform .18s ease,box-shadow .18s ease}
+.tile:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(75,135,165,.09)}
+.tile b{display:block;margin-bottom:5px}.pill{display:inline-block;background:var(--soft);padding:6px 10px;border-radius:999px;font-size:12px;color:#477c9f}
+.affirm{font-style:italic;color:#4d7d98;margin-top:13px}.divider{height:1px;background:var(--line);margin:16px 0}
+.nav{position:fixed;z-index:20;bottom:12px;left:50%;transform:translateX(-50%);width:min(740px,calc(100% - 24px));
+ display:flex;justify-content:space-around;padding:8px;background:var(--nav);backdrop-filter:blur(16px);
+ border:1px solid var(--line);border-radius:22px;box-shadow:0 14px 38px rgba(48,90,117,.12)}
+.nav button{background:transparent;color:var(--muted);padding:9px 8px;border-radius:14px;font-size:12px;min-width:70px}
+.nav button.active{background:var(--soft);color:#367ca9;font-weight:850}
+.modal{position:fixed;z-index:30;inset:0;background:rgba(23,62,83,.40);display:none;align-items:flex-end;justify-content:center;padding:12px}
+.modal.show{display:flex}.sheet{width:min(740px,100%);max-height:91vh;overflow:auto;background:var(--card);
+ border-radius:30px 30px 20px 20px;padding:24px;border:1px solid var(--line)}
+.close{float:right;width:38px;height:38px;border-radius:50%;background:var(--soft);font-size:24px}
+input,textarea,select{width:100%;padding:14px;border-radius:16px;border:1px solid var(--line);
+ background:var(--card);color:var(--ink);margin:7px 0 14px}
+.check{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.check button{padding:14px;border-radius:17px;background:var(--soft);border:1px solid var(--line);text-align:left}
+.check button.sel{outline:3px solid #9dd5f4}
+.options button{display:block;width:100%;padding:14px;margin:9px 0;border-radius:17px;background:var(--soft);text-align:left}
+.source{background:var(--soft);padding:12px;border-radius:15px;margin-top:12px;font-size:12px}
+.toast{position:fixed;z-index:50;top:16px;left:50%;transform:translateX(-50%);display:none;background:#183b55;color:white;
+ padding:12px 16px;border-radius:999px;max-width:90vw;text-align:center;box-shadow:0 10px 28px rgba(0,0,0,.16)}
+.toast.show{display:block}
+.install-card{display:none;margin-top:14px;padding:16px;border-radius:21px;background:linear-gradient(135deg,var(--soft),var(--card));border:1px solid var(--line)}
+.install-card.show{display:block}.install-card b{display:block;margin-bottom:4px}.install-status{font-size:12px;color:var(--muted);margin-top:7px}.install-btn{width:100%;margin-top:10px}
+.statusline{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:12px 0}
+.meter{height:9px;background:var(--soft);border-radius:99px;overflow:hidden}.meter i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .4s ease}
+.choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.choice-grid button{padding:11px 8px;border-radius:15px;background:var(--soft);border:1px solid var(--line)}
+.choice-grid button.sel{box-shadow:inset 0 0 0 2px var(--accent);font-weight:850}
+.tool-note{padding:13px 14px;border-left:4px solid var(--accent);background:var(--soft2);border-radius:14px;margin:12px 0}
+.zen{position:fixed;z-index:40;inset:0;background:linear-gradient(180deg,var(--bg),var(--bg2));display:none;align-items:center;justify-content:center;text-align:center;padding:24px}
+.zen.show{display:flex}.zen-inner{max-width:560px}.zen-orb{width:220px;height:220px;border-radius:50%;margin:0 auto 30px;
+ background:radial-gradient(circle at 35% 28%,#fff 0 8%,var(--accent2) 22%,var(--accent) 58%,#5a8ed3 100%);
+ box-shadow:0 0 0 22px rgba(174,224,248,.16),0 0 90px rgba(117,188,231,.30);animation:drift 10s ease-in-out infinite}
+.zen .tiny{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);white-space:nowrap}
+.list{display:grid;gap:8px}.list button{padding:14px;border-radius:17px;background:var(--soft);text-align:left}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:var(--soft);font-size:12px;font-weight:750}
+.kicker{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quiet .top,.quiet .nav,.quiet #quick,.quiet #libraryPreview,.quiet #oneThingCard{opacity:.12}
+.quiet .lumi{animation:none!important;box-shadow:0 0 0 12px rgba(174,224,248,.12),0 0 35px rgba(117,188,231,.20)}
+.quiet .card:not(.hero){display:none}.quiet .hero{min-height:67vh;display:flex;flex-direction:column;justify-content:center}
+.no-motion *{animation:none!important;transition:none!important}.no-motion .lumi,.no-motion .zen-orb{transform:none!important}
+.large-text{font-size:18px}
+@media(max-width:560px){.grid{grid-template-columns:1fr 1fr}.tile{padding:14px;font-size:14px}.lumi{width:150px;height:150px}
+ .card{padding:17px;border-radius:24px}.nav button{font-size:11px;padding:8px 5px;min-width:58px}.choice-grid{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+</style>
+
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#101418">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+</head>
+<body>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app">
+<header class="top">
+  <div><div class="brand">LumaPod</div><div class="sub" id="hello">A softer place to land.</div></div>
+  <button class="iconbtn" onclick="openSettings()" aria-label="Settings">⚙️</button>
+</header>
+
+<section id="home" class="screen active">
+  <div class="card hero">
+    <div class="eyebrow">Your calm corner</div>
+    <div class="lumi" id="lumi" aria-label="Lumi">Lumi</div>
+    <h1 id="greeting">Welcome</h1>
+    <p id="heroText" class="muted">You do not have to fix everything right now.</p>
+    <div class="row" style="margin-top:15px">
+      <button class="primary" onclick="startBreath(4)">Breathe with Lumi</button>
+      <button class="secondary" onclick="openCheckin()">Check in</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="secondary" onclick="sitWithMe()">🌙 Just sit with me</button>
+      <button class="secondary" onclick="openZen()">🫧 Escape</button>
+    </div>
+    <div class="affirm" id="affirm"></div>
+  </div>
+
+  <div class="card" id="quickCard">
+    <div class="kicker"><div><h2>What do you need?</h2><p class="muted small">No pressure. Pick one, or pick nothing.</p></div><span class="badge">gentle</span></div>
+    <div class="grid" id="quick"></div>
+    <button class="secondary" style="margin-top:12px;width:100%" onclick="dontKnow()">🤷 I don't know what I need</button>
+  </div>
+
+  <div class="card" id="oneThingCard">
+    <div class="kicker"><div><h2>One small thing</h2><p class="muted small">For when your brain has too many tabs open.</p></div><span class="badge">tiny step</span></div>
+    <p id="oneThing" class="muted">You do not need to do everything. Just choose one small next step.</p>
+    <button class="secondary" onclick="newOneThing()">Give me another</button>
+  </div>
+
+  <div class="card">
+    <div class="kicker"><div><h2>Quick tools</h2><p class="muted small">Short, predictable, low-friction.</p></div></div>
+    <div class="grid">
+      <button class="tile" onclick="openFocus()"><b>🎯 One-thing focus</b><span class="muted small">A short timer without streak pressure.</span></button>
+      <button class="tile" onclick="openGrounding()"><b>🌿 Grounding</b><span class="muted small">A simple sensory reset.</span></button>
+      <button class="tile" onclick="openWindDown()"><b>🌙 Wind-down</b><span class="muted small">Lower the mental volume.</span></button>
+      <button class="tile" onclick="openReset()"><b>🫧 Overwhelm reset</b><span class="muted small">Pause, soften, choose one.</span></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Lumi's Library</h2><p class="muted">Useful information when you want it. You never need to read it to use LumaPod.</p>
+    <div class="grid" id="libraryPreview"></div>
+    <button class="secondary" style="margin-top:12px;width:100%" onclick="show('library',document.querySelector('.nav button:nth-child(3)'))">Open the Library</button>
+  </div>
+</section>
+
+<section id="breathe" class="screen">
+  <div class="card hero">
+    <div class="eyebrow">Nothing to perform</div>
+    <div class="lumi breathe" id="breathLumi">Lumi</div>
+    <h1 id="breathTitle">Breathe in…</h1>
+    <p id="breathHint" class="muted">Slowly grow with Lumi.</p>
+    <div class="statusline"><span class="small muted">Session</span><span class="small muted" id="breathClock">4:00</span></div>
+    <div class="meter"><i id="breathMeter"></i></div>
+    <div class="row" style="margin-top:16px">
+      <button class="secondary" onclick="startBreath(2)">🌱 2 min</button>
+      <button class="secondary" onclick="startBreath(4)">🌿 4 min</button>
+      <button class="secondary" onclick="startBreath(8)">🌙 8 min</button>
+    </div>
+    <button class="secondary" style="margin-top:10px" onclick="stopBreath()">Finish gently</button>
+  </div>
+  <div class="card">
+    <div class="kicker"><div><h2>Soundscape</h2><p class="muted small">Simple device-generated tones; no downloads.</p></div><span id="soundBadge" class="badge">off</span></div>
+    <div class="row"><button class="secondary" onclick="sound('rain')">🌧 Rain-ish</button><button class="secondary" onclick="sound('ocean')">🌊 Ocean-ish</button><button class="secondary" onclick="sound('night')">🌙 Night tone</button><button class="secondary" onclick="sound('off')">🔇 Off</button></div>
+    <p class="small muted">If sound feels distracting, turn it off. Silence is a feature.</p>
+  </div>
+</section>
+
+<section id="library" class="screen">
+  <div class="card">
+    <div class="eyebrow">Optional reading</div><h1>🧠 Lumi's Library</h1>
+    <p class="muted">Open this when understanding helps. Close it when calm matters more.</p>
+    <button class="secondary" onclick="show('home',document.querySelector('.nav button:first-child'))">← Back to calm</button>
+  </div>
+  <div class="grid" id="libraryGrid"></div>
+</section>
+
+<section id="profile" class="screen">
+  <div class="card"><div class="eyebrow">Your space</div><h1>Your Lumi profile</h1><p class="muted">Age changes wording and examples. Nothing here is a diagnosis.</p><div id="profileBody"></div></div>
+  <div class="card"><h2>Progress without pressure</h2><p class="muted small">LumaPod does not use streaks, rankings or missed-day penalties.</p><div id="progress"></div></div>
+  <div class="card"><h2>📝 Quiet reflection</h2><p class="muted">Optional. A few words can be enough.</p><textarea id="reflection" rows="3" placeholder="How are you feeling now?"></textarea><button class="secondary" onclick="saveReflection()">Save privately on this device</button></div>
+</section>
+</div>
+
+<nav class="nav" aria-label="Main navigation">
+  <button class="active" onclick="show('home',this)">🏠<br>Home</button>
+  <button onclick="show('breathe',this)">🌬<br>Breathe</button>
+  <button onclick="show('library',this)">🧠<br>Library</button>
+  <button onclick="show('profile',this)">✨<br>Me</button>
+</nav>
+
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="if(event.target===this)closeModal()">
+  <div class="sheet"><button class="close" onclick="closeModal()" aria-label="Close">×</button><div id="modalBody"></div></div>
+</div>
+
+<div id="zen" class="zen" aria-live="polite">
+  <div class="zen-inner">
+    <div class="eyebrow">Escape hatch</div>
+    <div class="zen-orb" aria-hidden="true"></div>
+    <h1 id="zenTitle">Nothing to solve.</h1>
+    <p id="zenText" class="muted">Let your attention rest somewhere soft for a while.</p>
+    <div class="row" style="margin-top:18px">
+      <button class="secondary" onclick="zenChange()">Another thought</button>
+      <button class="secondary" onclick="closeZen()">Return gently</button>
+    </div>
+  </div>
+  <button class="ghost tiny" onclick="closeZen()">× close escape</button>
+</div>
+
+<script>
+const KEY='lumapod_complete_v2';
+const OLD_KEY='lumapod_complete_v1';
+const TOPICS={
+adhd:{icon:'🧩',title:'ADHD',what:'ADHD can affect attention, activity, impulse control and organisation. People can experience it in different ways.',why:'Clear steps, short tasks, breaks and fewer distractions can make some tasks easier to approach.',goal:'Make everyday things easier to handle. You do not need to become a different person.',try:'Try one small focus session for 10–20 minutes.',help:'If attention or organisation problems affect everyday life, talk with a GP or qualified professional. Younger users can start with a trusted adult.',source:'NHS ADHD guidance.'},
+ocd:{icon:'🔄',title:'OCD',what:'OCD can involve unwanted thoughts, images or urges, and actions or mental rituals called compulsions.',why:'Grounding may help you settle in a difficult moment. It is not a cure for OCD and is not a replacement for treatment.',goal:'Understand the pattern and know when to ask for proper support.',try:'Use a calming exercise for a few minutes without using it to prove a thought is safe.',help:'If thoughts or rituals take up a lot of time or interfere with life, talk with a GP or qualified mental-health professional.',source:'NHS OCD overview and treatment.'},
+anxiety:{icon:'🌊',title:'Anxiety',what:'Anxiety is a body and mind response to threat, uncertainty or pressure. It can affect thoughts and physical feelings.',why:'Slow breathing, grounding and one manageable step can help some people feel more settled.',goal:'Have more ways to respond when anxiety shows up.',try:'Try 2–5 minutes, then notice how you feel.',help:'If anxiety is persistent or gets in the way of everyday life, talk with someone you trust or a healthcare professional.',source:'NHS CBT and wellbeing information.'},
+stress:{icon:'⚡',title:'Stress & overwhelm',what:'Stress can happen when demands feel bigger than the time, energy or support you have.',why:'Breaking things into one next step can make the moment feel less crowded.',goal:'Create a little space between you and the next task.',try:'Try a 2-minute reset, then choose one next step.',help:'If stress is hard to manage or affects daily life, talk to someone you trust or a healthcare professional.',source:'General wellbeing education.'},
+sleep:{icon:'🌙',title:'Sleep & winding down',what:'Sleep is affected by routines, light, activity, stress and your environment.',why:'A quieter routine can help your mind shift towards rest.',goal:'A gentle wind-down, not perfect sleep.',try:'Try a 5–10 minute wind-down.',help:'If sleep problems keep going or affect your day, consider speaking with a healthcare professional.',source:'General wellbeing education.'},
+focus:{icon:'🎯',title:'Focus & concentration',what:'Focus can be harder when you are tired, stressed, distracted or carrying lots of thoughts.',why:'Short tasks, clear instructions and breaks can make a task feel more manageable.',goal:'Progress, not perfect concentration.',try:'Try one 10-minute “one thing” session.',help:'If concentration problems are persistent and affect daily life, talk with a healthcare professional.',source:'NHS ADHD guidance.'},
+grounding:{icon:'🌿',title:'Grounding',what:'Grounding helps you notice what is happening around you right now.',why:'Your senses can give your attention somewhere simple to rest.',goal:'Feel a little more here and less pulled around by everything at once.',try:'Try 1–3 minutes.',help:'If you often feel detached, frightened or unable to manage daily life, talk with someone you trust or a healthcare professional.',source:'General wellbeing education.'},
+intrusive:{icon:'💭',title:'Unwanted thoughts',what:'Most people have thoughts they do not choose. Having a thought is not the same as wanting it to happen.',why:'Noticing a thought without treating it as a fact can create some space around it.',goal:'You do not need to control every thought.',try:'Notice the thought, then gently return to the present.',help:'If thoughts are very distressing, take up a lot of time, or lead to rituals or avoidance, seek professional support.',source:'General mental-health education.'},
+emotion:{icon:'🫶',title:'Big feelings',what:'Feelings can be strong and can show up in the body. You do not have to judge a feeling to notice it.',why:'Naming a feeling and slowing down can create a small pause before the next choice.',goal:'Make feelings a little easier to sit with.',try:'Try a 2-minute check-in.',help:'If strong feelings regularly make life difficult or feel unsafe, reach out to someone you trust or a healthcare professional.',source:'General wellbeing education.'}
+};
+const ONE_THINGS=['Take one slow breath.','Relax your shoulders.','Put both feet on the floor.','Take a sip of water.','Look at one thing near you.','Do only the next tiny step.','Unclench your jaw.','Move one distracting object out of reach.','Write down the one thing you were about to do.','Give yourself permission to pause.'];
+const ZEN_LINES=['Nothing to solve.','You can let the next minute be ordinary.','Your attention can rest here.','No perfect breathing required.','You are allowed to pause.','One moment does not need to contain the whole day.'];
+let state=loadState(),timer=null,finishTimer=null,focusTimer=null,audio=null,focusEnd=0;
+function loadState(){
+  let raw=localStorage.getItem(KEY);
+  if(raw) return JSON.parse(raw);
+  let old=localStorage.getItem(OLD_KEY);
+  if(old){try{return {...JSON.parse(old),version:2}}catch(e){}}
+  return {version:2,name:'',age:null,feeling:'',goal:'',sessions:0,treats:0,lumiLevel:1,first:true,theme:'system',reduceMotion:false,largeText:false,lowStim:false,reflection:'',focusSessions:0,groundingSessions:0};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function band(){let a=Number(state.age)||18;return a<=10?'child':a<=12?'young':a<=15?'teen':a<=17?'olderteen':'adult'}
+function adapt(t){if(band()==='child')return t.replace(/\bhowever\b/gi,'but').replace(/\bpersistent\b/gi,'keeps happening').replace(/\bprofessional\b/gi,'health').replace(/\bmanage\b/gi,'handle');return t}
+function esc(x){return String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function affirmation(){
+ const a=band(),x=a==='child'?['One slow breath is enough.','You can take one small step.','You are allowed to pause.']:['You do not have to solve everything at once.','Take it one thing at a time.','You do not have to fix everything right now.'];
+ return '“'+x[Math.floor(Math.random()*x.length)]+'”';
+}
+function render(){
+ const n=state.name||'friend';
+ document.getElementById('hello').textContent=state.name?`A softer place to land, ${state.name}.`:'A softer place to land.';
+ document.getElementById('greeting').textContent=`Welcome, ${n}`;
+ document.getElementById('heroText').textContent=band()==='child'?'Let’s make things feel a little calmer.':'You do not have to fix everything right now.';
+ document.getElementById('affirm').textContent=affirmation();
+ const q=[['🌿','Settle','anxiety'],['🎯','Focus','focus'],['🌙','Wind down','sleep'],['⚡','Reset','stress'],['🌿','Ground','grounding'],['🫶','Big feelings','emotion']];
+ document.getElementById('quick').innerHTML=q.map(x=>`<button class="tile" onclick="openTopic('${x[2]}')"><b>${x[0]} ${x[1]}</b><span class="muted small">A gentle place to start.</span></button>`).join('');
+ const keys=Object.keys(TOPICS);
+ document.getElementById('libraryPreview').innerHTML=keys.slice(0,4).map(topicTile).join('');
+ document.getElementById('libraryGrid').innerHTML=keys.map(topicTile).join('');
+ document.getElementById('profileBody').innerHTML=`<p><b>${esc(state.name||'Not set')}</b> · age ${state.age||'Not set'}</p><p class="muted">Language: ${{child:'simple and playful',young:'simple and clear',teen:'teen-friendly',olderteen:'older-teen friendly',adult:'adult, clear and calm'}[band()]}</p><div class="row"><button class="primary" onclick="setup(true)">Edit profile</button></div>`;
+ document.getElementById('progress').innerHTML=`<p>🌱 Sessions completed: <b>${state.sessions}</b></p><p>🎯 Focus sessions: <b>${state.focusSessions}</b></p><p>🌿 Grounding sessions: <b>${state.groundingSessions}</b></p><p>✨ Lumi level: <b>${state.lumiLevel}</b></p>`;
+ document.getElementById('lumi').textContent=state.lumiLevel>3?'Lumi ✨':state.lumiLevel>1?'Lumi ·':'Lumi';
+ document.getElementById('reflection').value=state.reflection||'';
+ applyPreferences();
+}
+function topicTile(k){let t=TOPICS[k];return `<button class="tile" onclick="openTopic('${k}')"><b>${t.icon} ${t.title}</b><span class="muted small">Tap if you want to know more.</span></button>`}
+function openModal(html){document.getElementById('modalBody').innerHTML=html;document.getElementById('modal').classList.add('show')}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function setup(edit=false){
+ openModal(`<h1 id="modalTitle">${edit?'Edit your profile':'Welcome to LumaPod'} 🌙</h1>
+ <p class="muted">Lumi uses your age to choose clearer words and examples. You can change it later.</p>
+ <label>Your name</label><input id="nameIn" value="${esc(state.name)}" maxlength="30" placeholder="What should Lumi call you?">
+ <label>Your age</label><input id="ageIn" type="number" min="8" max="120" value="${state.age||''}" placeholder="e.g. 12">
+ <h3>What are you looking for?</h3><div class="check">${[['calmer','🌿 Feel calmer'],['focus','🎯 Focus'],['sleep','🌙 Sleep'],['understand','🧠 Understand myself'],['company','🫶 A little company'],['notSure','🤷 Not sure']].map(x=>`<button data-v="${x[0]}" onclick="this.classList.toggle('sel')">${x[1]}</button>`).join('')}</div>
+ <div class="row" style="margin-top:16px"><button class="primary" onclick="saveSetup()">Continue</button><button class="secondary" onclick="closeModal()">Skip</button></div>
+ <p class="small muted">LumaPod is a wellbeing companion, not a diagnostic or emergency service.</p>`);
+}
+function saveSetup(){
+ let n=document.getElementById('nameIn').value.trim(),a=Number(document.getElementById('ageIn').value);
+ if(!n||!a||a<8||a>120){toast('Please enter your name and a valid age.');return}
+ state.name=n;state.age=a;state.first=false;save();closeModal();render();toast(`Nice to meet you, ${n}.`);
+}
+function openCheckin(){
+ openModal(`<h1 id="modalTitle">How are you feeling?</h1><p class="muted">There is no right answer.</p><div class="options">${['😌 Calm','😟 Worried','😣 Overwhelmed','😴 Tired','😤 Frustrated','🫥 Numb','🤷 Not sure'].map(x=>`<button onclick="checkin('${x}')">${x}</button>`).join('')}</div>`);
+}
+function checkin(x){state.feeling=x;save();closeModal();toast('Thanks for checking in.');render()}
+function openTopic(k){
+ let t=TOPICS[k];
+ openModal(`<h1 id="modalTitle">${t.icon} ${t.title}</h1><span class="pill">Optional guide</span>
+ <h3 style="margin-top:18px">What is it?</h3><p>${adapt(t.what)}</p>
+ <h3>Why might a LumaPod tool help?</h3><p>${adapt(t.why)}</p>
+ <h3>What is the goal?</h3><p>${adapt(t.goal)}</p><h3>Try this</h3><p>${adapt(t.try)}</p>
+ <h3>When should I talk to someone?</h3><p>${adapt(t.help)}</p>
+ ${k==='ocd'?'<div class="tool-note"><b>OCD-safe boundary:</b> LumaPod does not diagnose OCD, provide reassurance rituals, or ask you to carry out exposure exercises by yourself. If OCD is affecting your life, professional treatment can help.</div>':''}
+ <div class="source"><b>Source:</b> ${t.source}<br>Educational information only. It does not replace assessment or professional care.</div>
+ <button class="primary" style="margin-top:14px" onclick="closeModal();show('breathe',document.querySelector('.nav button:nth-child(2)'))">Try a calming tool</button>`);
+}
+function startBreath(minutes=4){
+ show('breathe',document.querySelector('.nav button:nth-child(2)'));
+ clearInterval(timer);clearTimeout(finishTimer);
+ const total=minutes*60,start=Date.now();
+ const phases=[['Breathe in…','Slowly grow with Lumi.'],['Hold gently…','No need to force anything.'],['Let it go…','Let your shoulders soften.'],['Rest…','Just be here for a moment.']];
+ let i=0;document.getElementById('breathLumi').className='lumi breathe';
+ document.getElementById('breathTitle').textContent=phases[0][0];document.getElementById('breathHint').textContent=phases[0][1];
+ timer=setInterval(()=>{let elapsed=(Date.now()-start)/1000,left=Math.max(0,total-elapsed);document.getElementById('breathClock').textContent=formatTime(left);document.getElementById('breathMeter').style.width=(elapsed/total*100)+'%';if(Math.floor(elapsed/2)>i){i=Math.floor(elapsed/2);let q=phases[i%phases.length];document.getElementById('breathTitle').textContent=q[0];document.getElementById('breathHint').textContent=q[1]}},250);
+ finishTimer=setTimeout(()=>finishBreath(),total*1000+200);
+}
+function finishBreath(){
+ clearInterval(timer);clearTimeout(finishTimer);timer=null;
+ state.sessions++;state.treats++;if(state.sessions%3===0)state.lumiLevel++;
+ save();render();document.getElementById('breathMeter').style.width='100%';toast('You made a little space for yourself ✨');
+}
+function stopBreath(){clearInterval(timer);clearTimeout(finishTimer);timer=null;document.getElementById('breathLumi').className='lumi';document.getElementById('breathClock').textContent='—';document.getElementById('breathMeter').style.width='0%';show('home',document.querySelector('.nav button:first-child'))}
+function sitWithMe(){show('breathe',document.querySelector('.nav button:nth-child(2)'));clearInterval(timer);clearTimeout(finishTimer);document.getElementById('breathLumi').className='lumi still';document.getElementById('breathTitle').textContent='I’m here.';document.getElementById('breathHint').textContent='No exercise. No questions. You can simply sit with Lumi.';document.getElementById('breathClock').textContent='—';document.getElementById('breathMeter').style.width='0%'}
+function openZen(){document.getElementById('zen').classList.add('show');zenChange()}
+function closeZen(){document.getElementById('zen').classList.remove('show')}
+function zenChange(){let x=ZEN_LINES[Math.floor(Math.random()*ZEN_LINES.length)];document.getElementById('zenTitle').textContent=x;document.getElementById('zenText').textContent='Let your attention rest somewhere soft. Nothing is being measured.'}
+function quietMode(){document.body.classList.toggle('quiet');toast(document.body.classList.contains('quiet')?'Quiet mode on':'Quiet mode off')}
+function dontKnow(){openModal(`<h1 id="modalTitle">That’s okay.</h1><p class="muted">You do not have to know what you need.</p><div class="options"><button onclick="closeModal();startBreath(2)">🌬 Just breathe</button><button onclick="closeModal();sitWithMe()">🌙 Just sit with me</button><button onclick="closeModal();newOneThing()">🌱 Give me one tiny thing</button><button onclick="closeModal();openZen()">🫧 Give my brain somewhere soft to rest</button></div>`)}
+function newOneThing(){let x=ONE_THINGS[Math.floor(Math.random()*ONE_THINGS.length)];document.getElementById('oneThing').textContent=x}
+function openFocus(){
+ openModal(`<h1 id="modalTitle">🎯 One-thing focus</h1><p class="muted">Pick a small window. You can stop early. No streaks, no punishment.</p>
+ <div class="choice-grid" id="focusChoices">${[5,10,15,25].map(n=>`<button onclick="chooseFocus(${n},this)">${n} min</button>`).join('')}</div>
+ <div class="tool-note">Before starting: name <b>one</b> thing. If another thought arrives, park it on paper and return when you can.</div>
+ <div class="row"><button class="primary" onclick="beginFocus()">Start focus</button><button class="secondary" onclick="closeModal()">Not now</button></div>`);
+ window.selectedFocus=10;
+}
+function chooseFocus(n,el){window.selectedFocus=n;document.querySelectorAll('#focusChoices button').forEach(x=>x.classList.remove('sel'));el.classList.add('sel')}
+function beginFocus(){
+ let mins=window.selectedFocus||10;closeModal();let end=Date.now()+mins*60000;focusEnd=end;
+ openModal(`<h1 id="modalTitle">🎯 One thing</h1><p class="muted">You only need to be with the next step.</p><div class="statusline"><b id="focusClock">${mins}:00</b><span class="badge">focus</span></div><div class="meter"><i id="focusMeter"></i></div><p id="focusCue" class="tool-note">Start gently. You can stop whenever you want.</p><div class="row"><button class="secondary" onclick="finishFocus(false)">Finish gently</button></div>`);
+ clearInterval(focusTimer);focusTimer=setInterval(()=>{
+  let left=Math.max(0,end-Date.now()),pct=100-left/(mins*60000)*100;
+  let sec=Math.ceil(left/1000);document.getElementById('focusClock').textContent=formatTime(sec);
+  document.getElementById('focusMeter').style.width=pct+'%';
+  if(left<=0)finishFocus(true);
+ },250);
+}
+function finishFocus(completed){
+ clearInterval(focusTimer);focusTimer=null;
+ if(completed){state.focusSessions++;state.sessions++;state.treats++;if(state.sessions%3===0)state.lumiLevel++;save();render();toast('Focus window complete. Nice work, gently.')}
+ closeModal();
+}
+function openGrounding(){
+ openModal(`<h1 id="modalTitle">🌿 5–4–3–2–1 grounding</h1><p class="muted">You can keep your eyes open. Go slowly. Skip anything uncomfortable.</p>
+ <div class="list"><button onclick="groundStep('5 things you can see')">5 · Look for things you can see</button><button onclick="groundStep('4 things you can feel')">4 · Notice things you can feel</button><button onclick="groundStep('3 sounds you can hear')">3 · Notice sounds</button><button onclick="groundStep('2 scents you can notice')">2 · Notice scents</button><button onclick="groundStep('1 slow breath or sip of water')">1 · One slow breath or sip of water</button></div>
+ <div class="tool-note" id="groundCue">No need to do this perfectly. The point is simply to notice.</div><button class="secondary" onclick="groundDone()" style="width:100%">Done</button>`);
+}
+function groundStep(t){document.getElementById('groundCue').textContent=t+'. Take your time.'}
+function groundDone(){state.groundingSessions++;save();closeModal();toast('Grounding complete.');render()}
+function openWindDown(){
+ openModal(`<h1 id="modalTitle">🌙 Wind-down</h1><p class="muted">A tiny sequence for lowering the volume.</p>
+ <div class="list"><button onclick="windStep(1)">1 · Dim one light or lower your screen brightness</button><button onclick="windStep(2)">2 · Put one unfinished task somewhere safe to remember tomorrow</button><button onclick="windStep(3)">3 · Unclench your jaw and drop your shoulders</button><button onclick="windStep(4)">4 · Choose quiet, a soft sound, or silence</button></div>
+ <div class="tool-note" id="windCue">You do not need to make yourself sleep. You are only making the environment gentler.</div>`);
+}
+function windStep(n){let a=['Nice. One less thing to carry.','Your brain can trust the note to hold it for now.','Let the muscles soften without forcing them.','That is enough. The rest can wait.'];document.getElementById('windCue').textContent=a[n-1]}
+function openReset(){
+ openModal(`<h1 id="modalTitle">🫧 Overwhelm reset</h1><p class="muted">Three small moves. Nothing to catch up on.</p>
+ <div class="list"><button onclick="resetStep(1)">1 · Pause — stop adding new tasks for 60 seconds</button><button onclick="resetStep(2)">2 · Soften — breathe, stretch, or put your feet down</button><button onclick="resetStep(3)">3 · Choose — what is the smallest useful next step?</button></div>
+ <div class="tool-note" id="resetCue">Overwhelm is a cue to reduce the load, not proof that you are failing.</div>`);
+}
+function resetStep(n){let a=['Pause is productive when your system is overloaded.','No need to make the feeling disappear. Just make a little room.','Pick the smallest useful step, not the whole staircase.'];document.getElementById('resetCue').textContent=a[n-1]}
+function formatTime(sec){sec=Math.max(0,Math.ceil(sec));let m=Math.floor(sec/60),s=sec%60;return m+':'+String(s).padStart(2,'0')}
+function saveReflection(){let v=document.getElementById('reflection').value.trim();state.reflection=v;save();toast(v?'Saved quietly on this device.':'Reflection cleared.')}
+function setTheme(v){state.theme=v;save();applyPreferences();toast(v==='night'?'Night mode on':v==='day'?'Day mode on':'Using device theme')}
+function toggleMotion(){state.reduceMotion=!state.reduceMotion;save();applyPreferences();closeModal();toast(state.reduceMotion?'Motion reduced':'Motion restored')}
+function setText(big){state.largeText=big;save();applyPreferences();toast(big?'Larger text on':'Normal text on')}
+function toggleLow(){state.lowStim=!state.lowStim;save();applyPreferences();closeModal();toast(state.lowStim?'Low-stimulation mode on':'Full palette restored')}
+function applyPreferences(){
+ let v=state.theme||'system',dark=v==='night'||(v==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);
+ document.body.classList.toggle('dark',dark);document.body.classList.toggle('no-motion',!!state.reduceMotion);document.body.classList.toggle('large-text',!!state.largeText);document.body.classList.toggle('low',!!state.lowStim);
+}
+function openSettings(){
+ openModal(`<h1 id="modalTitle">Settings</h1>
+ <h3>Appearance</h3><div class="row"><button class="secondary" onclick="setTheme('day')">☀️ Day</button><button class="secondary" onclick="setTheme('night')">🌙 Night</button><button class="secondary" onclick="setTheme('system')">📱 System</button></div>
+ <h3 style="margin-top:18px">Sensory comfort</h3><div class="row"><button class="secondary" onclick="toggleMotion()">✨ ${state.reduceMotion?'Normal motion':'Reduce motion'}</button><button class="secondary" onclick="toggleLow()">◐ ${state.lowStim?'Full palette':'Low stimulation'}</button><button class="secondary" onclick="setText(true)">A+ Larger text</button><button class="secondary" onclick="setText(false)">Aa Normal text</button></div>
+ <h3 style="margin-top:18px">Profile</h3><button class="secondary" onclick="closeModal();setup(true)">Edit name & age</button>
+ <h3 style="margin-top:18px">Data</h3><button class="secondary danger" onclick="clearData()">Clear local data</button><p class="small muted">Your profile, reflections and progress stay on this device. LumaPod does not require an account.</p>
+ <div class="tool-note"><b>Safety note:</b> LumaPod is for calming and wellbeing support, not diagnosis or emergency care. If you are in immediate danger or may hurt yourself or someone else, contact local emergency services or a trusted person now.</div>`);
+ updateInstallUI();
+}
+function clearData(){if(confirm('Clear your LumaPod profile, reflection and progress?')){localStorage.removeItem(KEY);location.reload()}}
+
+function sound(type){
+ if(audio){try{audio.close()}catch(e){}audio=null}
+ document.getElementById('soundBadge').textContent=type==='off'?'off':type;
+ if(type==='off'){toast('Sound off');return}
+ try{let C=window.AudioContext||window.webkitAudioContext;audio=new C();let o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=type==='rain'?220:type==='ocean'?110:165;g.gain.value=.012;o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+3600);toast('Soft '+type+' tone on')}catch(e){toast('Sound is not available on this device')}
+}
+function show(id,btn){
+ document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');
+ window.scrollTo({top:0,behavior:state.reduceMotion?'auto':'smooth'});
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeZen()}});
+applyPreferences();render();updateInstallUI();
+if(state.first)setTimeout(()=>setup(),300);
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if((state.theme||'system')==='system')applyPreferences()});
+</script>
+
+<script>
+(function () {
+  let deferredPrompt = null;
+
+  function createInstallButton() {
+    if (document.getElementById('lumapod-install-button')) return;
+    var button = document.createElement('button');
+    button.id = 'lumapod-install-button';
+    button.type = 'button';
+    button.textContent = 'Install LumaPod';
+    button.setAttribute('aria-label', 'Install LumaPod on this device');
+    button.style.cssText = [
+      'position:fixed','left:50%','bottom:18px','transform:translateX(-50%)',
+      'z-index:99999','padding:13px 20px','border:0','border-radius:999px',
+      'font:600 16px system-ui,sans-serif','cursor:pointer',
+      'box-shadow:0 6px 24px rgba(0,0,0,.25)'
+    ].join(';');
+    button.addEventListener('click', async function () {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        try { await deferredPrompt.userChoice; } catch (e) {}
+        deferredPrompt = null;
+        button.remove();
+      } else {
+        alert('In Chrome, open the ⋮ menu and choose Add to Home screen or Install app.');
+      }
+    });
+    document.body.appendChild(button);
+  }
+
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    deferredPrompt = event;
+    createInstallButton();
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+    var b = document.getElementById('lumapod-install-button');
+    if (b) b.remove();
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(function () {});
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
