@@ -211,20 +211,36 @@ background:rgba(255,255,255,.04);border:1px solid var(--line)}
 
 .envVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:block;background:#05090f;filter:saturate(1.05) contrast(1.02) brightness(.82);transition:filter .6s ease,opacity .8s ease;opacity:0}
 #envCanvas{z-index:0}
-#envStage.videoReady #envVideo{opacity:1}
+#envStage.videoReady #envVideo{opacity:1;animation:videoReveal .9s ease-out both}
 #envStage.videoReady #envCanvas{display:none}
 #envAudio{display:none}
+@keyframes videoReveal{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:scale(1)}}
 #envStage:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,.28) 45%,rgba(0,0,0,.55))}
 #envStage .envShade{z-index:2}
 #envStage .scenePulse{z-index:3}
 #envStage .envPanel{z-index:5}
 #envStage .gazeHint,#envStage .fullGazeExit{z-index:6}
 
+
+/* === Personal, Instinctive Home Hub === */
+.primaryHub{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.primaryHub button{min-height:132px;text-align:left;padding:18px;border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.035));border:1px solid var(--line);position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
+.primaryHub button:active{transform:scale(.985)}
+.primaryHub button:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.12)}
+.hubIcon{font-size:28px;display:block;margin-bottom:10px}.hubTitle{font-size:18px;font-weight:950}.hubText{display:block;font-size:11px;color:var(--muted);margin-top:5px;line-height:1.45}
+.personalBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-top:12px;border-radius:17px;background:rgba(255,255,255,.045);border:1px solid var(--line)}
+.personDot{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#9b8fff);font-weight:950}
+.personInfo{flex:1;min-width:0}.personInfo b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.personInfo span{font-size:10px;color:var(--muted)}
+.soundPill{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:10px;font-weight:900}
+#ambientDock{transition:opacity .25s ease,transform .25s ease}
+body.gazeFull .soundPill{display:none}
+
 </style>
 </head>
 <body>
 <div class="ambient" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<audio id="themeAudio" loop preload="auto" src="./assets/audio/lumapod-theme.mp3"></audio>
 <div id="ambientDock">
   <span class="ambientDot"></span>
   <div><div class="ambientPanelTitle">LumaSound</div><div class="ambientPanelSub" id="ambientLabel">Ambient on</div></div>
@@ -242,24 +258,21 @@ background:rgba(255,255,255,.04);border:1px solid var(--line)}
     <div class="eyebrow">your space</div>
     <div class="lumi" id="lumi">Lumi</div>
     <h1 id="greeting">Welcome</h1>
-    <p class="muted" id="heroText">You don't have to solve everything right now.</p>
-    <div class="hero-actions" style="margin-top:14px">
-      <button class="primary" onclick="startBreath(4)">🌬 Breathe</button>
-      <button class="secondary" onclick="openDistract()">🧩 Distract me</button>
-      <button class="secondary" onclick="openCheckin()">🫶 Check in</button>
+    <p class="muted" id="heroText">A calm place to return to.</p>
+    <div class="personalBar">
+      <div class="personDot" id="personDot">?</div>
+      <div class="personInfo"><b id="personName">Your LumaPod</b><span id="personSub">Personal space · ready when you are</span></div>
+      <span class="soundPill" id="homeSoundPill">🔊 Ambient</span>
     </div>
-    <div class="hero-actions" style="margin-top:9px">
-      <button class="secondary" onclick="openPods()">🌌 Enter a Pod</button>
-      <button class="secondary" onclick="openLuma()">✨ Talk to Luma</button>
+    <div class="primaryHub">
+      <button onclick="startBreath(2)"><span class="hubIcon">🌬️</span><span class="hubTitle">Calm</span><span class="hubText">Breathe, reset, or simply sit with Lumi.</span></button>
+      <button onclick="openPlay()"><span class="hubIcon">🧩</span><span class="hubTitle">Play</span><span class="hubText">Puzzles, mini-games and gentle challenges.</span></button>
+      <button onclick="openPods()"><span class="hubIcon">🌌</span><span class="hubTitle">Escape</span><span class="hubText">Step into a living place and gaze.</span></button>
+      <button onclick="openLuma()"><span class="hubIcon">✨</span><span class="hubTitle">Luma</span><span class="hubText">Talk, wander, or say absolutely nothing.</span></button>
     </div>
     <div class="affirm" id="affirm" style="margin-top:13px"></div>
-    <div id="installCard" class="install">
-      <b>Install LumaPod</b><div class="small muted">Put your little space on your home screen.</div>
-      <button class="primary install-btn" onclick="installApp()" style="margin-top:9px;width:100%">Install</button>
-      <div class="small muted" id="installHint" style="margin-top:7px"></div>
-    </div>
+    <div id="installCard" class="install"></div>
   </div>
-
   <div class="card" id="homeTools">
     <div class="kicker"><div><h2>Choose your mode</h2><p class="muted small">Fast, low-friction ways into the app.</p></div><span class="badge">no pressure</span></div>
     <div class="grid" style="margin-top:10px">
@@ -268,6 +281,11 @@ background:rgba(255,255,255,.04);border:1px solid var(--line)}
       <button class="tile" onclick="openPods()"><span class="icon">🌌</span><b>Escape Pods</b><span class="muted small">Rain, ocean, forest, space and more.</span></button>
       <button class="tile" onclick="openZen()"><span class="icon">🫧</span><b>Quiet escape</b><span class="muted small">Nothing to solve. Just somewhere softer.</span></button>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="kicker"><div><h2 id="usualTitle">Your usual</h2><p class="muted small" id="usualText">LumaPod remembers the little things you return to.</p></div><span class="badge">personal</span></div>
+    <div class="grid" style="margin-top:10px"><button class="tile" onclick="openUsualPod()"><span class="icon">🌌</span><b id="usualPodName">Your usual Pod</b><span class="muted small">Step back into your favourite atmosphere.</span></button><button class="tile" onclick="openDistract()"><span class="icon">🧩</span><b>Quick distraction</b><span class="muted small">A fresh little game.</span></button></div>
   </div>
 
   <div class="card">
@@ -705,7 +723,7 @@ function environmentTip(id){return{
  cloud:'Soft air · cloud layers · pale morning light.'
 }[id]||'Let the scene breathe.'}
 function leaveEnvironment(){stopEnvironment();stopPodMedia();document.getElementById('envStage').classList.remove('show')}
-function toggleGaze(){const s=document.getElementById('envStage');s.classList.toggle('gaze');toast(s.classList.contains('gaze')?'Gaze mode on':'Controls restored')}
+function toggleGaze(){toggleFullGaze()}
 function setEnvLight(v){document.getElementById('envCanvas').style.filter=`brightness(${Number(v)/100})`}
 function envQuiet(){envSoundOn=false;stopEnvironmentSound();document.getElementById('envSoundBtn').textContent='🔇 Quiet'}
 function cycleEnvSound(){
@@ -1025,7 +1043,7 @@ function toggleFullGaze(){
   if(stage)stage.classList.toggle('gaze',on);
 }
 document.getElementById('envStage')?.addEventListener('pointerup',e=>{
-  if(document.body.classList.contains('gazeFull') && e.target.id==='envStage')toggleFullGaze();
+  if(document.body.classList.contains('gazeFull') && !e.target.closest('.fullGazeExit'))toggleFullGaze();
 });
 
 const _oldEnterEnvironment2=enterEnvironment;
@@ -1224,20 +1242,19 @@ renderFlow();
   <video id="envVideo" class="envVideo" autoplay loop muted playsinline preload="auto"></video>
   <audio id="envAudio" loop preload="auto"></audio>
   <canvas id="envCanvas"></canvas><div class="scenePulse"></div>
-  <div class="envShade"></div><div class="gazeHint">Gaze mode · tap once to bring controls back</div><button class="fullGazeExit" onclick="toggleFullGaze()">Show controls</button><div class="fullGazeHint">Tap once anywhere to bring controls back</div>
+  <div class="envShade"></div><div class="gazeHint">Gaze mode · tap once to bring controls back</div><button class="fullGazeExit" onclick="toggleFullGaze()">Exit Gaze</button><div class="fullGazeHint">Tap once anywhere to bring controls back</div>
   <div class="envPanel">
     <div class="envTop">
-      <div><div class="envBadge" id="envBadge">🌌 Pod</div><div class="envTitle" id="envTitle">Cosmic Drift</div><div class="envSub" id="envSub">Stars, low hum, slow movement.</div></div>
+      <div><div class="envBadge" id="envBadge">🌌 Pod · LIVE</div><div class="envTitle" id="envTitle">Cosmic Drift</div><div class="envSub" id="envSub">Stars, low hum, slow movement.</div></div>
       <button class="secondary" onclick="leaveEnvironment()">Close</button>
     </div>
     <div class="envBtns">
       <button class="primaryEnv" id="envSoundBtn" onclick="cycleEnvSound()">🔊 Sound on</button>
       <button onclick="toggleEnvMotion()">✨ Motion</button>
-      <button onclick="toggleGaze()">👁 Gaze</button>
-      <button onclick="toggleFullGaze()">⛶ Hide controls</button>
+      <button class="primaryEnv" onclick="toggleFullGaze()">👁 Gaze</button><button onclick="toggleLiveSource()">🎥 Live</button>
       <button onclick="envQuiet()">🫧 Quiet</button>
       <button onclick="openDistract()">🧩 Puzzle</button>
-      <button onclick="openLumaFromPod()">✨ Luma</button>
+      <button onclick="openLumaFromPod()">✨ Luma</button><button onclick="openMediaCredits()">ⓘ Credits</button>
     </div>
     <div class="statusline" style="margin:11px 0 0"><span class="small" id="envTip">Let the scene breathe.</span><span class="small" id="envTimer">∞</span></div>
     <div class="statusline" style="margin:10px 0 0"><span class="small">Scene light</span><input class="envControlRange" id="envLight" type="range" min="40" max="120" value="100" oninput="setEnvLight(this.value)"></div>
@@ -1249,7 +1266,7 @@ renderFlow();
   <div>
     <div class="eyebrow" style="text-align:center;color:#9eb7ca">entering</div>
     <div class="introTitle" id="introTitle">Midnight Rain</div>
-    <div class="introSub" id="introSub">take a breath · the scene is waiting</div>
+    <div class="introSub" id="introSub">entering your world · sound and living video follow</div>
   </div>
 </div>
 
@@ -1286,4 +1303,111 @@ renderFlow();
     if(stage?.classList.contains('show') && envSoundOn && a?.src){a.volume=Math.min(1,Number(state.volume||35)/100*.72);a.play().catch(()=>{})}
   };
 })();
+
+/* === Persistent Ambient Theme + Personal Home JS === */
+const THEME_AUDIO_KEY='lumapod_theme_track_v1';
+let themePlaying=false;
+const THEME_TRACKS={
+  calm:'./assets/audio/lumapod-theme.mp3',
+  night:'./assets/audio/lumapod-theme.mp3',
+  soft:'./assets/audio/lumapod-theme.mp3'
+};
+function themeAudio(){return document.getElementById('themeAudio')}
+function setThemeTrack(mode='calm'){
+  const a=themeAudio();if(!a)return;
+  a.src=THEME_TRACKS[mode]||THEME_TRACKS.calm;
+  a.loop=true;a.volume=Math.min(.22,Math.max(.02,(Number(state.volume||35)/100)*.24));
+  localStorage.setItem(THEME_AUDIO_KEY,mode);
+}
+async function startThemeFromGesture(){
+  if(!ambientEnabled)return false;const a=themeAudio();if(!a)return false;
+  try{
+    if(!a.src)setThemeTrack(localStorage.getItem(THEME_AUDIO_KEY)||'calm');
+    if(a.paused){a.volume=Math.min(.22,Math.max(.02,(Number(state.volume||35)/100)*.24));await a.play();}
+    themePlaying=true;updateHomeSound();return true;
+  }catch(e){updateHomeSound();return false}
+}
+function stopTheme(){
+  const a=themeAudio();if(a)a.pause();themePlaying=false;updateHomeSound()
+}
+function updateHomeSound(){
+  const p=document.getElementById('homeSoundPill'),d=document.getElementById('ambientDock');if(p)p.textContent=ambientEnabled&&themePlaying?'🔊 Ambient on':ambientEnabled?'🔊 Ambient ready':'🔇 Sound off';if(d)d.classList.toggle('off',!ambientEnabled)
+}
+function toggleAmbient(){
+  ambientEnabled=!ambientEnabled;localStorage.setItem(AMBIENT_KEY,ambientEnabled?'on':'off');
+  if(ambientEnabled){startThemeFromGesture();applyAmbientDock();toast('Gentle theme on')}
+  else {stopTheme();stopEnvironmentSound();applyAmbientDock();toast('All sound off')}
+  updateHomeSound()
+}
+window.addEventListener('pointerdown',()=>{if(ambientEnabled&&!themePlaying)startThemeFromGesture()},{once:false,passive:true});
+window.addEventListener('touchstart',()=>{if(ambientEnabled&&!themePlaying)startThemeFromGesture()},{once:false,passive:true});
+function setMaster(v){
+  state.volume=Number(v);save();setPodVolume(v);const a=themeAudio();if(a)a.volume=Math.min(.22,Math.max(.02,Number(v)/100*.24));
+  const l=document.getElementById('volLabel');if(l)l.textContent=v+'%';
+}
+function setEnvVolume(v){setPodVolume(v);const a=themeAudio();if(a)a.volume=Math.min(.22,Math.max(.02,Number(v)/100*.24))}
+function openUsualPod(){
+  const id=state.lastPodId||'rain';enterEnvironment(id)
+}
+
+/* Save the last Pod used and bring it back to the home screen. */
+const __oldEnterEnvV12=enterEnvironment;
+enterEnvironment=function(id){
+  state.lastPodId=id;
+  const p=PODS.find(x=>x.id===id);
+  state.lastPodName=p?.name||'Your usual Pod';
+  save();saveStateToProfile();
+  document.getElementById('usualPodName')?.replaceChildren(document.createTextNode(state.lastPodName||'Your usual Pod'));
+  __oldEnterEnvV12(id);
+}
+
+/* Keep theme audio alive while travelling through app sections. */
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ambientEnabled&&!document.getElementById('envStage')?.classList.contains('show'))startThemeFromGesture()});
+
+function renderPersonalHome(){
+  const n=state.name||'friend',dot=document.getElementById('personDot'),pn=document.getElementById('personName'),ps=document.getElementById('personSub'),u=document.getElementById('usualPodName');
+  if(dot)dot.textContent=(n[0]||'?').toUpperCase();
+  if(pn)pn.textContent=state.name?`${state.name}'s LumaPod`:'Your LumaPod';
+  if(ps)ps.textContent=state.name?`Personal space · Lumi knows this is yours`:'Personal space · ready when you are';
+  if(u)u.textContent=state.lastPodName||'Your usual Pod';
+  updateHomeSound();
+}
+const __oldRenderV12=render;
+render=function(){__oldRenderV12();renderPersonalHome();renderFlow?.();renderBond?.();renderAchievements?.()}
+setThemeTrack(localStorage.getItem(THEME_AUDIO_KEY)||'calm');
+updateHomeSound();
+renderPersonalHome();
+
+
+const LIVE_FOOTAGE={"ocean": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Water_waves_in_Herzliya_beach.webm", "forest": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Trees_in_the_wind.webm", "rain": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Rainfall_captured.webm", "fire": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Fire_burning.webm", "space": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Star_trails.webm", "cloud": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Clouds_%28time_lapse%29.webm"};
+
+function toggleLiveSource(){
+  const v=document.getElementById('envVideo');if(!v||!envType)return;
+  const useLive=v.dataset.live!=='1';
+  if(useLive){
+    v.dataset.live='1';v.src=LIVE_FOOTAGE[envType];v.load();v.play().then(()=>document.getElementById('envStage').classList.add('videoReady')).catch(()=>{v.dataset.live='0';toast('Live footage could not load. Local scene remains available.')});
+    toast('Live footage on');
+  }else{
+    v.dataset.live='0';playPodMedia(envType);toast('Local fallback on');
+  }
+}
+const __oldPlayPodMediaV12=playPodMedia;
+playPodMedia=async function(id){
+  const v=document.getElementById('envVideo');if(v&&v.dataset.live==='1'&&LIVE_FOOTAGE[id]){v.src=LIVE_FOOTAGE[id];v.load();try{await v.play();document.getElementById('envStage').classList.add('videoReady')}catch(e){};return}
+  return __oldPlayPodMediaV12(id);
+}
+
+
+function openMediaCredits(){
+  openSheet(`<h1>🎥 Pod media</h1><p class="muted">Live footage uses real-world video from Wikimedia Commons when available. Each item remains attributed here.</p>
+  <div class="list">
+    <button onclick="window.open('https://commons.wikimedia.org/wiki/File:Water_waves_in_Herzliya_beach.webm','_blank')">Ocean · Water waves in Herzliya beach · CC BY-SA 4.0</button>
+    <button onclick="window.open('https://commons.wikimedia.org/wiki/File:Trees_in_the_wind.webm','_blank')">Forest · Trees in the wind · CC BY-SA 4.0</button>
+    <button onclick="window.open('https://commons.wikimedia.org/wiki/File:Rainfall_captured.webm','_blank')">Rain · Rainfall captured · license shown on source page</button>
+    <button onclick="window.open('https://commons.wikimedia.org/wiki/File:Fire_burning.webm','_blank')">Fire · Fire burning · CC BY-SA 4.0</button>
+    <button onclick="window.open('https://commons.wikimedia.org/wiki/File:Star_trails.webm','_blank')">Space · Star trails · CC BY 4.0</button>
+    <button onclick="window.open('https://commons.wikimedia.org/wiki/File:Clouds_(time_lapse).webm','_blank')">Cloud · Clouds (time lapse) · CC BY 3.0</button>
+  </div>`);
+}
+
 </script>
