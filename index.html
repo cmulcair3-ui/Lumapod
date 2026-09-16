@@ -175,6 +175,39 @@ body.gazeFull .fullGazeHint{opacity:.85;animation:fadeHint 3s ease 1s forwards}
 }
 .soundProfile button.active{box-shadow:inset 0 0 0 2px var(--accent)}
 
+
+/* === Deep Immersion + Game Flow Upgrade === */
+body.scene-ocean{background:linear-gradient(180deg,#071e2e 0%,#0b5160 58%,#071521 100%)}
+body.scene-forest{background:linear-gradient(180deg,#061a15 0%,#153f30 55%,#081510 100%)}
+body.scene-space{background:linear-gradient(180deg,#090b12 0%,#1a1c2c 45%,#02040a 100%)}
+body.scene-rain{background:linear-gradient(180deg,#0a1628 0%,#20344d 58%,#08101b 100%)}
+body.scene-fire{background:linear-gradient(180deg,#160907 0%,#5a2b17 55%,#100604 100%)}
+body.scene-cloud{background:linear-gradient(180deg,#dbe9f3 0%,#91b1c8 58%,#566f82 100%)}
+
+#envCanvas{transition:filter .5s ease;will-change:filter}
+#envStage{background:#05090f}
+#envStage.gaze .envPanel{transition:opacity .7s ease,transform .7s ease}
+#envStage.gaze .gazeHint{letter-spacing:.03em}
+
+#gameFlow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:10px 12px;border-radius:18px;
+background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.flowStat{font-size:11px;color:var(--muted)}.flowStat b{color:var(--ink)}
+.flowMeter{flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;max-width:180px}
+.flowMeter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#b38dff);transition:width .35s ease}
+.comboGlow{box-shadow:0 0 0 1px rgba(119,200,255,.15),0 0 30px rgba(119,200,255,.10)}
+.comboText{font-weight:950}
+.nextPuzzleStrip{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:12px;border-radius:18px;background:linear-gradient(135deg,rgba(119,200,255,.10),rgba(170,142,255,.10));border:1px solid rgba(150,190,255,.16);margin-top:12px}
+.nextPuzzleStrip button{padding:9px 11px;border-radius:13px;background:rgba(255,255,255,.08);border:1px solid var(--line);font-weight:900}
+.breathInterlude{position:fixed;inset:0;z-index:180;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(3,8,16,.82);backdrop-filter:blur(20px)}
+.breathInterlude.show{display:flex}
+.breathInterludeInner{max-width:460px}
+.interludeOrb{width:150px;height:150px;border-radius:50%;margin:0 auto 25px;background:radial-gradient(circle at 34% 28%,#fff 0 8%,#bff4ff 20%,#72cfff 55%,#7a71e8 100%);box-shadow:0 0 80px rgba(119,200,255,.34);animation:interludeBreath 5s ease-in-out infinite}
+@keyframes interludeBreath{0%,100%{transform:scale(.82)}50%{transform:scale(1.08)}}
+.scenePulse{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 55%,rgba(215,245,255,.14),transparent 42%);animation:scenePulse 7s ease-in-out infinite}
+@keyframes scenePulse{50%{opacity:.55;transform:scale(1.04)}}
+.envStage.gaze .scenePulse{opacity:.55}
+@media(max-width:560px){#gameFlow{padding:9px}.flowMeter{max-width:110px}}
+
 </style>
 </head>
 <body>
@@ -974,6 +1007,109 @@ openGame=function(type){
 applyAmbientDock();
 if(ambientEnabled)startAmbient(ambientMode);
 
+
+/* === Deep Immersion + Game Flow Upgrade JS === */
+const FLOW_KEY='lumapod_gameflow_v1';
+let flow=(()=>{try{return JSON.parse(localStorage.getItem(FLOW_KEY)||'{"run":0,"xp":0,"combo":0,"gamesSinceBreath":0,"preferredNext":"auto"}')}catch(e){return{run:0,xp:0,combo:0,gamesSinceBreath:0,preferredNext:'auto'}}})();
+let interludeTimer=null, lastPuzzleType=null, autoNextTimer=null, sceneAudioType=null;
+
+function saveFlow(){localStorage.setItem(FLOW_KEY,JSON.stringify(flow))}
+function renderFlow(){
+  const r=document.getElementById('runGames'),x=document.getElementById('runXP'),l=document.getElementById('comboLabel'),m=document.getElementById('comboMeter');
+  if(!r)return;r.textContent=flow.run;x.textContent=flow.xp;
+  const labels=['🌱 Warm-up','✨ In the zone','🔥 Flowing','🌌 Deep flow','💫 Luma groove'];
+  l.textContent=labels[Math.min(labels.length-1,Math.floor(flow.combo/2))]+(flow.combo?` · x${flow.combo}`:'');
+  m.style.width=Math.min(100,(flow.combo%6)/6*100+(flow.combo>=6?100:0))+'%';
+}
+function puzzleReward(type){
+  const reward={wordsearch:12,sudoku:20,number:14,maths:12,spatial:16,mirror:16,memory:18,maze:14,pattern:15,anagram:12,oddone:10}[type]||12;
+  flow.run++;flow.xp+=reward+Math.min(20,flow.combo*2);flow.combo++;flow.gamesSinceBreath++;
+  state.bondXP=(state.bondXP||0)+1;
+  saveFlow();saveStateToProfile();renderFlow();renderBond();checkAchievements?.();
+}
+function completePuzzleFlow(type){
+  puzzleReward(type);
+  const messages=['Nice solve ✨','That clicked ✨','Good eye ✨','Lovely work ✨','You found the pattern ✨'];
+  showSuccess(messages[Math.floor(Math.random()*messages.length)]);
+  // After every 3 games, offer the intentional decompression moment.
+  if(flow.gamesSinceBreath>=3){
+    setTimeout(()=>showInterlude(),1300);
+  }else{
+    setTimeout(()=>startNextPuzzle(type),1300);
+  }
+}
+function chooseNextType(current){
+  const all=['wordsearch','sudoku','number','spatial','memory','maze','pattern','anagram','oddone','maths','mirror'];
+  const pool=all.filter(x=>x!==current);
+  // Gentle rotation: don't repeat the same puzzle twice.
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function startNextPuzzle(current){
+  const next=chooseNextType(current);lastPuzzleType=next;
+  openGame(next);
+  toast(`Next up: ${puzzleName(next)} ✨`);
+}
+function puzzleName(t){return({wordsearch:'Word Search',sudoku:'Sudoku',number:'Numerical Reasoning',spatial:'Spatial Reasoning',memory:'Memory',maze:'Mini Maze',pattern:'Pattern Tap',anagram:'Anagram',oddone:'Odd One Out',maths:'Quick Maths',mirror:'Mirror Challenge'})[t]||'Puzzle'}
+function showInterlude(){
+  const o=document.getElementById('breathInterlude');o.classList.add('show');
+  document.getElementById('interludeTitle').textContent=`${flow.run} games in. Let's breathe.`;
+  document.getElementById('interludeText').textContent='You have been giving your attention somewhere to go. Now give it a softer place for a moment.';
+  document.getElementById('interludeClock').textContent='';
+}
+function startInterlude(){
+  clearInterval(interludeTimer);let left=30;const clock=document.getElementById('interludeClock');clock.textContent='0:30';
+  interludeTimer=setInterval(()=>{left--;clock.textContent='0:'+String(left).padStart(2,'0');if(left<=0){clearInterval(interludeTimer);flow.gamesSinceBreath=0;flow.combo=0;saveFlow();document.getElementById('breathInterlude').classList.remove('show');renderFlow();startBreath(1)}},1000);
+}
+function skipInterlude(){clearInterval(interludeTimer);flow.gamesSinceBreath=0;saveFlow();document.getElementById('breathInterlude').classList.remove('show');renderFlow();setTimeout(()=>startNextPuzzle(lastPuzzleType||currentGame),350)}
+
+const originalMarkPuzzleFlow=markPuzzle;
+markPuzzle=function(){
+  // Stop the old immediate-only reward logic from being the only response;
+  // keep its achievements/bond behavior, then add the new run layer.
+  originalMarkPuzzleFlow();
+  completePuzzleFlow(currentGame);
+};
+
+const originalOpenGameFlow=openGame;
+openGame=function(type){
+  currentGame=type;lastPuzzleType=type;startPuzzleMusic(type);originalOpenGameFlow(type);
+  renderFlow();
+};
+
+function decoratePuzzleSheet(){
+  const sheet=document.getElementById('sheetBody');if(!sheet)return;
+  if(!sheet.querySelector('#inlinePuzzleFlow')){
+    const div=document.createElement('div');div.id='inlinePuzzleFlow';div.className='note';div.style.marginTop='12px';
+    div.innerHTML=`<b id="inlineFlowTitle">Run ${flow.run}</b> · ${puzzleName(currentGame)} <span class="muted">· ${flow.combo?`x${flow.combo} combo`:'start your run'}</span>`;
+    sheet.appendChild(div);
+  }
+}
+const originalGameShell=gameShell;
+gameShell=function(title,subtitle,body){originalGameShell(title,subtitle,body);decoratePuzzleSheet()};
+
+/* Keep the scene visually distinct from the rest of the app while inside a Pod. */
+const originalEnterEnvironmentFlow=enterEnvironment;
+enterEnvironment=function(id){
+  document.body.classList.remove('scene-ocean','scene-forest','scene-space','scene-rain','scene-fire','scene-cloud');
+  document.body.classList.add('scene-'+id);
+  originalEnterEnvironmentFlow(id);
+  // The scene itself owns the sound while you are inside it.
+  sceneAudioType=id;
+};
+const originalLeaveEnvironmentFlow=leaveEnvironment;
+leaveEnvironment=function(){
+  document.body.classList.remove('scene-ocean','scene-forest','scene-space','scene-rain','scene-fire','scene-cloud');
+  originalLeaveEnvironmentFlow();
+  if(ambientEnabled)startAmbient(ambientMode);
+};
+
+/* Prevent control/menu visibility from interfering with gaze. */
+document.getElementById('envStage')?.addEventListener('dblclick',()=>{
+  if(document.getElementById('envStage').classList.contains('show'))toggleFullGaze();
+});
+
+renderFlow();
+
 </script>
 <style>
 .lumi{animation-name:float}
@@ -994,9 +1130,9 @@ if(ambientEnabled)startAmbient(ambientMode);
 .envBtns .primaryEnv{background:rgba(162,221,255,.22);border-color:rgba(162,221,255,.35)}
 #successOverlay{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;pointer-events:none}
 #successOverlay.show{display:flex}
-.successOrb{width:170px;height:170px;border-radius:50%;position:relative;display:grid;place-items:center;font-size:44px;
+.successOrb{width:190px;height:170px;border-radius:50%;position:relative;display:grid;place-items:center;font-size:44px;
   background:radial-gradient(circle at 35% 30%,#fff 0 6%,#a7f2df 18%,#72cfff 52%,#7274e8 100%);
-  box-shadow:0 0 0 0 rgba(123,232,210,.3),0 0 120px rgba(111,204,255,.5);
+  box-shadow:0 0 0 0 rgba(123,232,210,.3),0 0 150px rgba(111,204,255,.58);
   animation:successPop .9s cubic-bezier(.18,.9,.2,1.2) both}
 .successOrb:before,.successOrb:after{content:"";position:absolute;border:2px solid rgba(255,255,255,.75);border-radius:50%;inset:-12px;animation:successRing 1s ease-out both}
 .successOrb:after{inset:-34px;animation-delay:.08s}
@@ -1035,7 +1171,7 @@ if(ambientEnabled)startAmbient(ambientMode);
 </style>
 
 <div id="envStage" aria-live="polite">
-  <canvas id="envCanvas"></canvas>
+  <canvas id="envCanvas"></canvas><div class="scenePulse"></div>
   <div class="envShade"></div><div class="gazeHint">Gaze mode · tap once to bring controls back</div><button class="fullGazeExit" onclick="toggleFullGaze()">Show controls</button><div class="fullGazeHint">Tap once anywhere to bring controls back</div>
   <div class="envPanel">
     <div class="envTop">
@@ -1062,6 +1198,20 @@ if(ambientEnabled)startAmbient(ambientMode);
     <div class="eyebrow" style="text-align:center;color:#9eb7ca">entering</div>
     <div class="introTitle" id="introTitle">Midnight Rain</div>
     <div class="introSub" id="introSub">take a breath · the scene is waiting</div>
+  </div>
+</div>
+
+<div id="breathInterlude" class="breathInterlude">
+  <div class="breathInterludeInner">
+    <div class="eyebrow" style="color:#9fcbe1">little reset</div>
+    <div class="interludeOrb"></div>
+    <h1 id="interludeTitle">Three games in. Let's breathe.</h1>
+    <p class="muted" id="interludeText">No score to chase here. Just a few slower seconds before the next adventure.</p>
+    <div class="row" style="margin-top:16px">
+      <button class="primary" onclick="startInterlude()">🌬 Take 30 seconds</button>
+      <button class="secondary" onclick="skipInterlude()">Keep playing</button>
+    </div>
+    <div class="small muted" id="interludeClock" style="margin-top:10px"></div>
   </div>
 </div>
 
