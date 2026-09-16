@@ -1,20 +1,16 @@
-# LumaPod — Cinematic Gaze v2
+# LumaPod — Puzzle Music + Achievements + Lumi Bond
 
-This revision concentrates on the Escape Pods:
-- Cinematic entrance transition before the scene opens.
-- Full-screen immersive scenes that occupy the whole viewport.
-- Gaze mode softly fades the controls while keeping the scene visible.
-- Separate mini-hub controls inside each environment.
-- Dedicated Luma button exits the pod and opens the separate Luma conversation.
-- Direct puzzle access remains available from the pod.
-- Local high-resolution Canvas scenes:
-  * Rain on glass / blue-hour
-  * Ocean / rolling waves / horizon glow
-  * Forest / tree depth / fireflies / birds
-  * Cosmic drift / deep-space stars
-  * Fireplace / ember field / warm glow
-  * Cloud layers / weightless movement
-- Each environment has its own distinct procedural sound recipe.
-- Scene-light control and motion pause.
-- Service-worker cache bumped to v6.
-- Existing multi-profile/password work is preserved.
+Adds:
+- Puzzle-specific theme choices: Focus, Mystery, Bright, Ambient, Auto, Off.
+- Each puzzle type has a default musical theme.
+- More engaging puzzle feedback through audio mood.
+- Achievement system with unlockable badges/rewards.
+- Progress counters for word, numerical, spatial and memory puzzles.
+- Pod exploration achievements.
+- A Lumi relationship/bond system from Level 1–10.
+- Bond XP grows with puzzles, Pod visits, focus and calm sessions.
+- Profile screen shows Lumi bond level and collectible rewards.
+- Achievement unlock toasts with gentle particle bursts.
+- Service worker bumped to v7.
+
+Important: puzzle and environment music remains procedurally generated in-browser so the app stays self-contained and offline.
