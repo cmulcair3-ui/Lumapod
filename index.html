@@ -132,11 +132,59 @@ background:rgba(10,20,34,.88);backdrop-filter:blur(24px);border:1px solid rgba(2
 .rewardBadge.locked{opacity:.35;filter:saturate(.2)}
 @media(max-width:560px){.rewardShelf{grid-template-columns:repeat(3,1fr)}}
 
+
+/* === Ambient Always-On + True Immersive Gaze === */
+#ambientDock{
+  position:fixed;right:16px;top:16px;z-index:65;
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border-radius:18px;background:rgba(8,16,28,.64);backdrop-filter:blur(18px);
+  border:1px solid var(--line);box-shadow:0 12px 38px rgba(0,0,0,.18)
+}
+body.light #ambientDock{background:rgba(255,255,255,.78)}
+#ambientDock button{padding:8px 10px;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+#ambientDock .ambientDot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 12px rgba(143,224,187,.8)}
+.ambientPanelTitle{font-size:13px;font-weight:900}.ambientPanelSub{font-size:10px;color:var(--muted)}
+#ambientDock.off .ambientDot{background:var(--muted);box-shadow:none}
+body.gazeFull #envStage .envPanel{opacity:0!important;pointer-events:none!important;transform:translate(-50%,18px)!important}
+body.gazeFull #envStage .gazeHint{opacity:.95}
+body.gazeFull #envStage{cursor:none}
+body.gazeFull #ambientDock{display:none}
+.fullGazeExit{
+ position:fixed;right:14px;top:14px;z-index:170;display:none;
+ padding:10px 12px;border-radius:15px;background:rgba(7,13,24,.34);
+ color:#fff;border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(16px)
+}
+body.gazeFull .fullGazeExit{display:block}
+.fullGazeHint{
+ position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:170;
+ padding:8px 12px;border-radius:999px;background:rgba(7,13,24,.35);color:#d9efff;
+ border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(12px);font-size:10px;
+ opacity:0;transition:opacity .4s ease;pointer-events:none
+}
+body.gazeFull .fullGazeHint{opacity:.85;animation:fadeHint 3s ease 1s forwards}
+@keyframes fadeHint{to{opacity:0}}
+.podBack{
+ position:absolute;left:14px;top:14px;z-index:3;padding:9px 11px;border-radius:14px;
+ background:rgba(7,13,24,.30);color:#fff;border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(12px)
+}
+.soundProfile{
+ display:flex;gap:7px;flex-wrap:wrap;margin-top:9px
+}
+.soundProfile button{
+ padding:8px 10px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:11px;font-weight:850
+}
+.soundProfile button.active{box-shadow:inset 0 0 0 2px var(--accent)}
+
 </style>
 </head>
 <body>
 <div class="ambient" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
-<div id="toast" class="toast" role="status" aria-live="polite"></div><div id="achievementToast" class="achievementToast" aria-live="polite"></div><div id="rewardBurst" class="rewardBurst"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="ambientDock">
+  <span class="ambientDot"></span>
+  <div><div class="ambientPanelTitle">LumaSound</div><div class="ambientPanelSub" id="ambientLabel">Ambient on</div></div>
+  <button onclick="toggleAmbient()">🔊</button>
+</div><div id="achievementToast" class="achievementToast" aria-live="polite"></div><div id="rewardBurst" class="rewardBurst"></div>
 
 <div class="app">
 <header class="top">
@@ -807,6 +855,125 @@ finishBreath=function(){grantBond(1);_oldFinishBreath();checkAchievements();rend
 
 // Add gentle theme audio to puzzle opening without changing gameplay.
 
+
+/* === Ambient Always-On + Immersive Gaze JS === */
+const AMBIENT_KEY='lumapod_ambient_v1';
+const AMBIENT_SCENES={
+  calm:{label:'Calm Drift',kind:'calm'},
+  piano:{label:'Soft Piano',kind:'piano'},
+  rain:{label:'Rain Atmosphere',kind:'rain'},
+  ocean:{label:'Ocean Atmosphere',kind:'ocean'}
+};
+let ambientEnabled = localStorage.getItem(AMBIENT_KEY)!=='off';
+let ambientMode = localStorage.getItem('lumapod_ambient_mode')||'calm';
+let ambientTimer=null;
+
+function applyAmbientDock(){
+  const d=document.getElementById('ambientDock'); if(!d)return;
+  d.classList.toggle('off',!ambientEnabled);
+  document.getElementById('ambientLabel').textContent=ambientEnabled?`Ambient · ${AMBIENT_SCENES[ambientMode]?.label||'Calm Drift'}`:'Ambient off';
+  const b=d.querySelector('button'); b.textContent=ambientEnabled?'🔊':'🔇';
+}
+function toggleAmbient(){
+  ambientEnabled=!ambientEnabled;
+  localStorage.setItem(AMBIENT_KEY,ambientEnabled?'on':'off');
+  applyAmbientDock();
+  if(ambientEnabled) startAmbient(ambientMode);
+  else stopEnvironmentSound();
+  toast(ambientEnabled?'Gentle ambient layer on':'All sound off');
+}
+function setAmbientMode(mode){
+  ambientMode=mode;localStorage.setItem('lumapod_ambient_mode',mode);
+  if(ambientEnabled)startAmbient(mode);applyAmbientDock();
+}
+function ensureSoftAudio(){
+  try{ensureAudio();if(audioCtx.state==='suspended')audioCtx.resume();return true}catch(e){return false}
+}
+function makeTone(freq,type='sine',gainVal=.018){
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.value=freq;g.gain.value=gainVal;o.connect(g);g.connect(masterGain);o.start();
+  return [o,g]
+}
+function startAmbient(mode='calm'){
+  if(!ambientEnabled||!ensureSoftAudio())return;
+  stopEnvironmentSound();
+  const now=audioCtx.currentTime;
+  const local=[];
+  try{
+    const bed=audioCtx.createOscillator(),bg=audioCtx.createGain();
+    bed.type='sine';
+    bed.frequency.value=mode==='piano'?174:mode==='calm'?146:110;
+    bg.gain.value=mode==='piano'?.010:.008;
+    bed.connect(bg);bg.connect(masterGain);bed.start();local.push(bed);
+    const bed2=audioCtx.createOscillator(),g2=audioCtx.createGain();
+    bed2.type='sine';bed2.frequency.value=mode==='piano'?261:mode==='calm'?220:mode==='ocean'?82:98;
+    g2.gain.value=.006;bed2.connect(g2);g2.connect(masterGain);bed2.start();local.push(bed2);
+
+    if(mode==='rain'||mode==='ocean'){
+      const n=audioCtx.createBufferSource();n.buffer=noiseBuffer(5);n.loop=true;
+      const f=audioCtx.createBiquadFilter();
+      f.type=mode==='rain'?'bandpass':'lowpass';f.frequency.value=mode==='rain'?2600:850;
+      n.connect(f);const ng=audioCtx.createGain();ng.gain.value=mode==='rain'?.08:.045;f.connect(ng);ng.connect(masterGain);n.start();local.push(n);
+      const l=audioCtx.createOscillator(),lg=audioCtx.createGain();l.frequency.value=mode==='rain'?.07:.055;lg.gain.value=.05;l.connect(lg);lg.connect(f.frequency);l.start();local.push(l);
+    }
+
+    if(mode==='piano'){
+      // Slow, sparse note bed; avoids sounding like a constant drone.
+      const notes=[261.63,329.63,392.00,493.88];
+      notes.forEach((f,i)=>{
+        const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+        o.type='triangle';o.frequency.value=f;g.gain.value=.0;o.connect(g);g.connect(masterGain);o.start();
+        const gain=.009-i*.0012;
+        g.gain.setValueAtTime(0,now);
+        g.gain.linearRampToValueAtTime(gain,now+1.6+i*.8);
+        g.gain.setValueAtTime(gain,now+5.2+i*.45);
+        g.gain.linearRampToValueAtTime(0,now+7+i*.55);
+        local.push(o);
+      });
+    }
+  }catch(e){}
+  audioNodes=local;
+}
+
+/* Full-screen gaze: hide all controls. Tap anywhere to restore. */
+function toggleFullGaze(){
+  const on=document.body.classList.toggle('gazeFull');
+  const stage=document.getElementById('envStage');
+  if(stage)stage.classList.toggle('gaze',on);
+}
+document.getElementById('envStage')?.addEventListener('pointerup',e=>{
+  if(document.body.classList.contains('gazeFull') && e.target.id==='envStage')toggleFullGaze();
+});
+
+const _oldEnterEnvironment2=enterEnvironment;
+enterEnvironment=function(id){
+  _oldEnterEnvironment2(id);
+  // Ambient layer follows the room, with the option to stay on.
+  if(ambientEnabled){
+    setTimeout(()=>{
+      const mode = id==='rain'?'rain':id==='ocean'?'ocean':'calm';
+      setAmbientMode(mode);
+    },250);
+  }
+};
+
+const _oldLeaveEnvironment=leaveEnvironment;
+leaveEnvironment=function(){
+  document.body.classList.remove('gazeFull');
+  _oldLeaveEnvironment();
+  if(ambientEnabled)startAmbient('calm');
+};
+
+const _oldOpenGame2=openGame;
+openGame=function(type){
+  _oldOpenGame2(type);
+  // Puzzle audio is now secondary to the ambient layer; a soft theme is layered.
+  if(ambientEnabled)setAmbientMode(effectivePuzzleTheme(type)==='off'?'calm':'piano');
+};
+
+applyAmbientDock();
+if(ambientEnabled)startAmbient(ambientMode);
+
 </script>
 <style>
 .lumi{animation-name:float}
@@ -869,7 +1036,7 @@ finishBreath=function(){grantBond(1);_oldFinishBreath();checkAchievements();rend
 
 <div id="envStage" aria-live="polite">
   <canvas id="envCanvas"></canvas>
-  <div class="envShade"></div><div class="gazeHint">Gaze mode · controls softened</div>
+  <div class="envShade"></div><div class="gazeHint">Gaze mode · tap once to bring controls back</div><button class="fullGazeExit" onclick="toggleFullGaze()">Show controls</button><div class="fullGazeHint">Tap once anywhere to bring controls back</div>
   <div class="envPanel">
     <div class="envTop">
       <div><div class="envBadge" id="envBadge">🌌 Pod</div><div class="envTitle" id="envTitle">Cosmic Drift</div><div class="envSub" id="envSub">Stars, low hum, slow movement.</div></div>
@@ -879,6 +1046,7 @@ finishBreath=function(){grantBond(1);_oldFinishBreath();checkAchievements();rend
       <button class="primaryEnv" id="envSoundBtn" onclick="cycleEnvSound()">🔊 Sound on</button>
       <button onclick="toggleEnvMotion()">✨ Motion</button>
       <button onclick="toggleGaze()">👁 Gaze</button>
+      <button onclick="toggleFullGaze()">⛶ Hide controls</button>
       <button onclick="envQuiet()">🫧 Quiet</button>
       <button onclick="openDistract()">🧩 Puzzle</button>
       <button onclick="openLumaFromPod()">✨ Luma</button>
