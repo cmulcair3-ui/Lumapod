@@ -1,17 +1,20 @@
-# LumaPod — Sensory + Profiles Upgrade
+# LumaPod — Cinematic Gaze v2
 
-This upgrade adds:
-- Full-screen animated environments for every Escape Pod using device-rendered Canvas visuals.
-- Environment-specific motion: rain, waves, trees/fireflies, stars, embers, and drifting cloud layers.
-- Environment-specific procedural sound profiles using Web Audio.
-- A success celebration overlay for completed puzzles with glow, rings and particle burst.
-- Local multi-profile support with individual names, ages and password protection using Web Crypto SHA-256 + random salt.
-- Profile switching on shared devices.
-- Device-only profile storage (not cloud authentication).
-- `lumapod-v4` service-worker cache.
-
-Important:
-- No external GIF/image hosts are required for the environments; the scenes are rendered locally, which keeps them crisp on HD displays and works offline.
-- Password protection is local-device protection, not a cloud account/security system.
-- Never put an OpenAI API key in this public repository. Use a server-side proxy such as a Cloudflare Worker for real AI calls.
-- Keep your existing icon files.
+This revision concentrates on the Escape Pods:
+- Cinematic entrance transition before the scene opens.
+- Full-screen immersive scenes that occupy the whole viewport.
+- Gaze mode softly fades the controls while keeping the scene visible.
+- Separate mini-hub controls inside each environment.
+- Dedicated Luma button exits the pod and opens the separate Luma conversation.
+- Direct puzzle access remains available from the pod.
+- Local high-resolution Canvas scenes:
+  * Rain on glass / blue-hour
+  * Ocean / rolling waves / horizon glow
+  * Forest / tree depth / fireflies / birds
+  * Cosmic drift / deep-space stars
+  * Fireplace / ember field / warm glow
+  * Cloud layers / weightless movement
+- Each environment has its own distinct procedural sound recipe.
+- Scene-light control and motion pause.
+- Service-worker cache bumped to v6.
+- Existing multi-profile/password work is preserved.
