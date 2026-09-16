@@ -208,6 +208,18 @@ background:rgba(255,255,255,.04);border:1px solid var(--line)}
 .envStage.gaze .scenePulse{opacity:.55}
 @media(max-width:560px){#gameFlow{padding:9px}.flowMeter{max-width:110px}}
 
+
+.envVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:block;background:#05090f;filter:saturate(1.05) contrast(1.02) brightness(.82);transition:filter .6s ease,opacity .8s ease;opacity:0}
+#envCanvas{z-index:0}
+#envStage.videoReady #envVideo{opacity:1}
+#envStage.videoReady #envCanvas{display:none}
+#envAudio{display:none}
+#envStage:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,.28) 45%,rgba(0,0,0,.55))}
+#envStage .envShade{z-index:2}
+#envStage .scenePulse{z-index:3}
+#envStage .envPanel{z-index:5}
+#envStage .gazeHint,#envStage .fullGazeExit{z-index:6}
+
 </style>
 </head>
 <body>
@@ -646,6 +658,35 @@ function markPuzzle(){
   state.puzzles=(state.puzzles||0)+1;save();saveStateToProfile();showSuccess('Puzzle complete ✨');render();
 }
 
+
+const POD_ASSETS={
+  ocean:{video:'./assets/pods/ocean.mp4',audio:'./assets/audio/ocean.mp3'},
+  forest:{video:'./assets/pods/forest.mp4',audio:'./assets/audio/forest.mp3'},
+  rain:{video:'./assets/pods/rain.mp4',audio:'./assets/audio/rain.mp3'},
+  space:{video:'./assets/pods/space.mp4',audio:'./assets/audio/space.mp3'},
+  fire:{video:'./assets/pods/fire.mp4',audio:'./assets/audio/fire.mp3'},
+  cloud:{video:'./assets/pods/cloud.mp4',audio:'./assets/audio/cloud.mp3'}
+};
+function stopPodMedia(){
+  const v=document.getElementById('envVideo'),a=document.getElementById('envAudio');
+  if(v){v.pause();v.removeAttribute('src');v.load()}
+  if(a){a.pause();a.removeAttribute('src');a.load()}
+}
+async function playPodMedia(id){
+  const asset=POD_ASSETS[id];if(!asset)return;
+  const stage=document.getElementById('envStage'),v=document.getElementById('envVideo'),a=document.getElementById('envAudio');
+  if(!v||!a)return;
+  v.src=asset.video;v.load();
+  a.src=asset.audio;a.loop=true;a.volume=Math.min(1,Number(state.volume||35)/100*0.72);
+  stage.classList.remove('videoReady');
+  try{await v.play();stage.classList.add('videoReady')}catch(e){stage.classList.remove('videoReady')}
+  if(envSoundOn){try{await a.play()}catch(e){}}
+}
+function setPodVolume(v){
+  const a=document.getElementById('envAudio');if(a)a.volume=Math.min(1,Number(v)/100*.72);
+  const ambient=document.getElementById('ambientDock');if(ambient)ambient.style.opacity=Number(v)===0?.5:1;
+}
+
 function enterEnvironment(id){
   const p=PODS.find(x=>x.id===id)||PODS[0];envType=id;currentPod=p;
   state.pods=(state.pods||0)+1;save();saveStateToProfile();render();
@@ -653,7 +694,7 @@ function enterEnvironment(id){
   document.getElementById('introTitle').textContent=p.name;
   document.getElementById('introSub').textContent=environmentTip(id);
   intro.classList.add('show');
-  setTimeout(()=>{intro.classList.remove('show');stage.classList.add('show');stage.classList.remove('gaze');startEnvironmentCanvas(id);startEnvironmentSound(id)},1250);
+  setTimeout(()=>{intro.classList.remove('show');stage.classList.add('show');stage.classList.remove('gaze');startEnvironmentCanvas(id);startEnvironmentSound(id);playPodMedia(id)},1250);
 }
 function environmentTip(id){return{
  rain:'Rain on glass · distant thunder · blue-hour light.',
@@ -663,11 +704,17 @@ function environmentTip(id){return{
  fire:'Warm crackle · rising embers · fireplace glow.',
  cloud:'Soft air · cloud layers · pale morning light.'
 }[id]||'Let the scene breathe.'}
-function leaveEnvironment(){stopEnvironment();document.getElementById('envStage').classList.remove('show')}
+function leaveEnvironment(){stopEnvironment();stopPodMedia();document.getElementById('envStage').classList.remove('show')}
 function toggleGaze(){const s=document.getElementById('envStage');s.classList.toggle('gaze');toast(s.classList.contains('gaze')?'Gaze mode on':'Controls restored')}
 function setEnvLight(v){document.getElementById('envCanvas').style.filter=`brightness(${Number(v)/100})`}
 function envQuiet(){envSoundOn=false;stopEnvironmentSound();document.getElementById('envSoundBtn').textContent='🔇 Quiet'}
-function cycleEnvSound(){envSoundOn=!envSoundOn;if(envSoundOn)startEnvironmentSound(envType);else stopEnvironmentSound();document.getElementById('envSoundBtn').textContent=envSoundOn?'🔊 Sound on':'🔇 Sound off'}
+function cycleEnvSound(){
+  envSoundOn=!envSoundOn;
+  const a=document.getElementById('envAudio');
+  if(envSoundOn){if(a){a.volume=Math.min(1,Number(state.volume||35)/100*.72);a.play().catch(()=>{})}else startEnvironmentSound(envType)}
+  else {if(a)a.pause();stopEnvironmentSound()}
+  document.getElementById('envSoundBtn').textContent=envSoundOn?'🔊 Sound on':'🔇 Sound off'
+}
 function toggleEnvMotion(){envMotion=!envMotion;document.getElementById('envTip').textContent=envMotion?environmentTip(envType):'Motion paused. Sound can continue while the scene rests.'}
 function openLumaFromPod(){leaveEnvironment();openLuma()}
 
@@ -732,6 +779,7 @@ function drawCloudCine(x,w,h,t){
 
 function startEnvironmentSound(type){
   stopEnvironmentSound();envSoundType=type;if(!envSoundOn)return;
+  const real=document.getElementById('envAudio'); if(real && real.src) return;
   try{ensureAudio();if(audioCtx.state==='suspended')audioCtx.resume();const master=audioCtx.createGain();master.gain.value=.72;master.connect(masterGain);const now=audioCtx.currentTime;
     if(type==='ocean'){
       const n=audioCtx.createBufferSource();n.buffer=noiseBuffer(5);n.loop=true;const f=audioCtx.createBiquadFilter();f.type='lowpass';f.frequency.value=1150;n.connect(f);f.connect(master);
@@ -753,7 +801,9 @@ function startEnvironmentSound(type){
     }
   }catch(e){toast('Audio could not start — visuals remain active.')}
 }
-function stopEnvironmentSound(){try{audioNodes?.forEach(n=>{try{n.stop?.();n.disconnect?.()}catch(e){}})}catch(e){}audioNodes=[]}
+function stopEnvironmentSound(){
+  try{audioNodes?.forEach(n=>{try{n.stop?.();n.disconnect?.()}catch(e){}})}catch(e){}audioNodes=[];
+}
 function openLumaFromPod(){leaveEnvironment();openLuma()}
 PODS.forEach(p=>{if(!p.bg) p.bg='linear-gradient(135deg,#17283f,#0a1220)'});
 
@@ -855,7 +905,7 @@ function renderExtras(){renderBond();renderAchievements()}
 renderExtras();
 
 const _oldOpenGame=openGame;
-openGame=function(type){startPuzzleMusic(type);_oldOpenGame(type);};
+openGame=function(type){const a=document.getElementById('envAudio');if(a&&!a.paused)a.pause();startPuzzleMusic(type);_oldOpenGame(type);};
 
 const _oldMarkPuzzle=markPuzzle;
 markPuzzle=function(){
@@ -1171,6 +1221,8 @@ renderFlow();
 </style>
 
 <div id="envStage" aria-live="polite">
+  <video id="envVideo" class="envVideo" autoplay loop muted playsinline preload="auto"></video>
+  <audio id="envAudio" loop preload="auto"></audio>
   <canvas id="envCanvas"></canvas><div class="scenePulse"></div>
   <div class="envShade"></div><div class="gazeHint">Gaze mode · tap once to bring controls back</div><button class="fullGazeExit" onclick="toggleFullGaze()">Show controls</button><div class="fullGazeHint">Tap once anywhere to bring controls back</div>
   <div class="envPanel">
@@ -1223,4 +1275,15 @@ renderFlow();
 </body>
 </html>
 
-<script>try{renderExtras();}catch(e){}<\/script>
+<script>try{renderExtras();}catch(e){}</script>
+
+<script>
+(function(){
+  const origCloseSheet=closeSheet;
+  closeSheet=function(){
+    origCloseSheet();
+    const stage=document.getElementById('envStage'),a=document.getElementById('envAudio');
+    if(stage?.classList.contains('show') && envSoundOn && a?.src){a.volume=Math.min(1,Number(state.volume||35)/100*.72);a.play().catch(()=>{})}
+  };
+})();
+</script>

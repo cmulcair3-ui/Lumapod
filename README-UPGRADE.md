@@ -1,15 +1,20 @@
-# LumaPod — Deep Immersion + Games v3
+# LumaPod v10 — Local HD Living Environments
 
-Implemented:
-- Deeper per-environment app backgrounds for Ocean, Forest, Space, Rain, Fire and Cloud.
-- Cinematic scene pulse for subtle ambient movement.
-- True gaze/full-screen controls remain available.
-- Playroom has a run/XP/combo layer so puzzles have meaningful progression and stakes without gambling.
-- Completion now triggers a celebration, then automatically loads another puzzle.
-- Puzzle types rotate so the next one is different from the current one.
-- After three completed games, LumaPod pauses the run and suggests a 30-second breathing interlude.
-- The interlude can be taken or skipped.
-- Lumi bond XP continues to grow as the user explores and plays.
-- Service-worker cache bumped to v9.
+Included:
+- Six local MP4 environment loops stored in the app:
+  - ocean
+  - forest
+  - rain
+  - space
+  - fire
+  - cloud
+- Six local audio loops matched to their environment.
+- MP4 videos are 1280×720 HD, looped locally with no external media host.
+- Full-screen cinematic entrance remains.
+- Gaze mode remains available, including hide-controls mode.
+- Environment-specific scene colour grading.
+- Pod sound can be switched on/off.
+- Puzzle sessions pause Pod audio and resume it after returning.
+- Local service-worker cache bumped to v10.
 
-The scene visuals remain locally rendered for crisp, offline-friendly playback. The next visual pass can swap individual scenes to local HD looping MP4/WebM assets for genuinely photographic environments while keeping the same pod controls.
+The videos are self-contained local assets rather than remote embeds, so GitHub Pages serves them directly and the PWA can cache them.
